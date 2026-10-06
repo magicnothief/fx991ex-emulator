@@ -35,7 +35,9 @@ export function renderFrame(calc, lcd, statusEl, screenEl) {
   lcd.style.setProperty('--ink', `rgba(27, 29, 22, ${0.45 + contrast * 0.06})`);
   if (!calc.power) return null;
   const { el, status = {}, after } = calc.top.view();
-  statusEl.replaceChildren(...statusBar(calc, status));
+  // MENU uses the whole display: its icons fill the rows where other screens show indicators
+  lcd.classList.toggle('bare', !!status.bare);
+  statusEl.replaceChildren(...(status.bare ? [] : statusBar(calc, status)));
   screenEl.replaceChildren(el);
   after?.();
   return el;

@@ -157,7 +157,6 @@ export class Calculator {
     try {
       const data = {
         setup: this.setup,
-        mode: this.mode,
         vars: Object.fromEntries(Object.entries(this.mem.vars).map(([k, v]) => [k, pack(v)])),
         ans: pack(V.isMat(this.mem.ans) || V.isVec(this.mem.ans) ? null : this.mem.ans),
         mats: Object.fromEntries(Object.entries(this.mem.mats).map(([k, v]) => [k, pack(v)])),
@@ -177,7 +176,6 @@ export class Calculator {
       const data = JSON.parse(raw);
       this.setup = { ...structuredClone(DEFAULT_SETUP), ...data.setup };
       delete this.setup.decimalMark; // setting of the international model, not on the fx-991CE X
-      if (data.mode && this.modes[data.mode]) this.mode = data.mode;
       for (const [k, v] of Object.entries(data.vars || {})) this.mem.vars[k] = unpack(v);
       if (data.ans) this.mem.ans = unpack(data.ans);
       for (const [k, v] of Object.entries(data.mats || {})) this.mem.mats[k] = unpack(v);

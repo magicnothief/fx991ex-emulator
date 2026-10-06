@@ -7,8 +7,7 @@
   width: calc(var(--lp) * 192);
   height: calc(var(--lp) * 63 + 2px);
   margin-top: calc(var(--lp) * 4);
-  background: linear-gradient(180deg, #b0b49a, var(--glass) 40%, #a2a68b);
-  box-shadow: inset 0 2px 5px rgba(0,0,0,.45);
+  background: var(--glass);
   color: var(--ink);
   overflow: hidden;
   font-family: var(--math-font);
@@ -83,9 +82,10 @@
   display: inline-block;
   width: calc(var(--lp) * 6);
   height: calc(var(--lp) * 8);
-  border: calc(var(--lp) * .7) dotted var(--ink);
+  border: calc(var(--lp) * .7) solid var(--ink);
   vertical-align: middle;
 }
+.cursor + .m-slot-empty { margin-left: calc(var(--lp) * -1); }
 .m-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 calc(var(--lp) * .8); }
 .m-frac > .m-num { padding: 0 calc(var(--lp) * .6) calc(var(--lp) * .8); border-bottom: calc(var(--lp) * .9) solid var(--ink); min-width: 100%; text-align: center; display: flex; justify-content: center; }
 .m-frac > .m-den { padding: calc(var(--lp) * .8) calc(var(--lp) * .6) 0; display: flex; justify-content: center; }
@@ -141,10 +141,12 @@
 
 .mainmenu { position: absolute; inset: 0; }
 /* 47×23-pixel cells on the calculator's 48×24 grid (ui/menuicons.js draws each cell pixel for pixel) */
-.mainmenu .icons { position: absolute; left: calc(var(--lp) * 1); top: 0; display: grid; grid-template-columns: repeat(4, calc(var(--lp) * 47)); grid-auto-rows: calc(var(--lp) * 23); gap: calc(var(--lp) * 1); }
+.lcd.bare .screen { top: 0; }
+.mainmenu .icons { position: absolute; left: calc(var(--lp) * 1); top: calc(var(--lp) * 1); display: grid; grid-template-columns: repeat(4, calc(var(--lp) * 47)); grid-auto-rows: calc(var(--lp) * 23); gap: calc(var(--lp) * 1); }
 .mainmenu .icon { color: var(--ink); }
 .mainmenu .icon svg { display: block; width: 100%; height: 100%; }
-.mainmenu .label { position: absolute; left: calc(var(--lp) * 3); bottom: calc(var(--lp) * 1); font: 600 calc(var(--lp) * 10)/1 "Consolas", "Courier New", monospace; }
+/* label on rows 49–62, below the second icon row's underline (row 47), in the menu font */
+.mainmenu .label { position: absolute; left: calc(var(--lp) * 2); top: calc(var(--lp) * 49); font: 600 calc(var(--lp) * 10)/calc(var(--lp) * 13.5) "Consolas", "Lucida Console", "Courier New", monospace; letter-spacing: calc(var(--lp) * -.1); }
 
 /* ---------------------------------------------------------- grids (matrix, statistics, table, spreadsheet) */
 

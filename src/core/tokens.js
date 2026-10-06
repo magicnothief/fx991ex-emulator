@@ -108,4 +108,5 @@ export const TEMPLATES = {
   int: 3,    // [f(x), lower, upper]
   diff: 2,   // [f(x), x value]
   sum: 3,    // [f(x), lower, upper]
+  box: 1,    // □ base of x², x⁻¹, x!, x▪ pressed with nothing before the cursor
 };

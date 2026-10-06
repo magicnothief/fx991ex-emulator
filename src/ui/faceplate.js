@@ -1,4 +1,4 @@
-// Builds the fx-991EX keypad. Key ids are the hardware keys; the calculator resolves SHIFT/ALPHA.
+// Builds the fx-991CE X keypad. Key ids are the hardware keys; the calculator resolves SHIFT/ALPHA.
 const box = '<span class="ico-box"></span>';
 const fill = '<span class="ico-fill"></span>';
 const fracIcon = `<span class="ico-frac">${fill}<span class="bar"></span>${box}</span>`;
@@ -8,6 +8,7 @@ const FN_ROWS = [
   [
     ['OPTN', 'OPTN', { s: 'QR' }],
     ['CALC', 'CALC', { s: 'SOLVE', a: '=' }],
+    null,
     null,
     ['INT', `∫<span class="small">${box}</span>${fill}`, { s: 'd/dx▪', a: ':' }],
     ['X', '<span class="it">x</span>', { s: 'Σ▪' }],

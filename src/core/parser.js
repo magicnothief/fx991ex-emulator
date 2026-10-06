@@ -395,6 +395,7 @@ function templateNode(it) {
     case 'int': return { t: 'call', fn: '∫', args: [s0, s1, s2] };
     case 'diff': return { t: 'call', fn: 'd/dx', args: [s0, s1] };
     case 'sum': return { t: 'call', fn: 'Σ', args: [s0, s1, s2] };
+    case 'box': return s0; // a base box is a group, like parentheses
     default: throw syntax(it.pos);
   }
 }

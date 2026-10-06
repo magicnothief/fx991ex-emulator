@@ -32,7 +32,7 @@ function createWindow() {
     y: saved?.y,
     minWidth: 230,
     minHeight: 480,
-    backgroundColor: '#e9e9e7',
+    backgroundColor: '#141517', // matches the page behind the faceplate
     title: 'fx-991EX Emulator',
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
     autoHideMenuBar: false,

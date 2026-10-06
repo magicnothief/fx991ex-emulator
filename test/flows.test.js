@@ -195,3 +195,13 @@ test('Base-N ignores the decimal key (J15)', () => {
 test('Statistics median is decimal (M12)', () => {
   assert.equal(result(keys(fresh(), 'MENU 6 1 1 EQ 2 EQ 3 EQ 4 EQ 5 EQ 6 EQ AC OPTN DOWN 3 3 EQ')), '3.5');
 });
+
+test('x², x⁻¹, x! and x▪ with nothing before them open an empty base box in Math input', () => {
+  assert.equal(result(keys(fresh(), 'AC SQR 3 EQ')), '9');
+  assert.equal(result(keys(fresh(), 'AC POW 2 RIGHT 3 EQ')), '8'); // ▶ goes from the base into the exponent
+  assert.equal(result(keys(fresh(), 'AC LP SQR 2 RIGHT RP EQ')), '4'); // ▶ leaves □² past the ²
+  assert.equal(result(keys(fresh(), 'AC 2 ADD SHIFT INV 3 EQ')), '8');
+  assert.equal(result(keys(fresh(), 'AC 3 SQR SQR EQ')), '81'); // a value before: no box
+  assert.equal(keys(fresh(), 'AC SQR EQ').top.kind, 'Syntax ERROR'); // empty box
+  assert.deepEqual(keys(fresh(), 'SHIFT MENU 1 3 AC SQR').top.editor.root.map((n) => n.id), ['²']); // Line input: no box
+});

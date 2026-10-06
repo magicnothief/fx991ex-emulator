@@ -59,7 +59,7 @@ class MainMenu {
       return h('div', 'icon', menuIcon(idx, MODE_KEYS[idx], idx === this.sel));
     });
     const el = h('div', 'mainmenu', h('div', 'icons', icons), h('div', 'label', `${MODE_KEYS[this.sel]}:${t(MODE_LIST[this.sel].label)}`));
-    return { el, status: { noMath: true } };
+    return { el, status: { bare: true } };
   }
 }
 

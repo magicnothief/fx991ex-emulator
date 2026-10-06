@@ -61,6 +61,7 @@ export class Editor {
 
   insert(id) {
     if (this.remaining() <= 0) return false;
+    if (BASE_KEYS.has(id) && this.needsBase()) return this.insertWithBase(tok(id));
     if (!this.math && this.overwrite && this.idx < this.slot.length) {
       this.slot.splice(this.idx, 1, tok(id));
     } else {
@@ -80,6 +81,7 @@ export class Editor {
     const slot = this.slot;
     // x▪ directly after an exponent box does nothing (2³ then x▪ stays 2³)
     if (id === 'pow' && this.math && slot[this.idx - 1]?.k === 'tpl' && slot[this.idx - 1].id === 'pow') return false;
+    if (id === 'pow' && !this.insArmed && this.needsBase()) return this.insertWithBase(node);
     if (this.insArmed) {
       // wrap the operand to the right of the cursor
       const end = operandEnd(slot, this.idx);
@@ -103,6 +105,26 @@ export class Editor {
     slot.splice(this.idx, 0, node);
     this.path.push({ node, slot: 0 });
     this.idx = 0;
+    return true;
+  }
+
+  /** In Math input, a key applying to the value before it gets an empty box when there is none. */
+  needsBase() {
+    if (!this.math) return false;
+    const prev = this.slot[this.idx - 1];
+    if (!prev) return true;
+    if (prev.k === 'tpl') return false;
+    return !OPERAND_END.has(tokenInfo(prev.id).kind);
+  }
+
+  /** Inserts □ followed by `node` (□², □^□) with the cursor in the box. */
+  insertWithBase(node) {
+    if (this.remaining() <= 1) return false;
+    const box = tpl('box');
+    this.slot.splice(this.idx, 0, box, node);
+    this.path.push({ node: box, slot: 0 });
+    this.idx = 0;
+    this.insArmed = false;
     return true;
   }
 
@@ -161,11 +183,24 @@ export class Editor {
     }
     this.path.pop();
     this.idx = this.slot.indexOf(top.node) + 1;
+    // □^□: from the base box straight into the exponent; □²: past the ²
+    const next = this.slot[this.idx];
+    if (top.node.id === 'box' && next?.k === 'tpl' && next.id === 'pow') {
+      this.path.push({ node: next, slot: 0 });
+      this.idx = 0;
+    } else if (top.node.id === 'box' && next?.k === 'tok' && BASE_KEYS.has(next.id)) this.idx++;
   }
 
   left() {
     if (this.idx > 0) {
       const node = this.slot[this.idx - 1];
+      const before = this.slot[this.idx - 2];
+      // □²: from after the ² back into the base box
+      if (this.math && node.k === 'tok' && BASE_KEYS.has(node.id) && before?.k === 'tpl' && before.id === 'box') {
+        this.idx--;
+        this.enterFromRight(before);
+        return;
+      }
       if (this.math && node.k === 'tpl') this.enterFromRight(node);
       else this.idx--;
       return;
@@ -179,6 +214,9 @@ export class Editor {
     }
     this.path.pop();
     this.idx = this.slot.indexOf(top.node);
+    // □^□: from the exponent straight back into the base box
+    const prev = this.slot[this.idx - 1];
+    if (top.node.id === 'pow' && prev?.k === 'tpl' && prev.id === 'box') this.enterFromRight(prev);
   }
 
   enterFromRight(node) {
@@ -239,6 +277,11 @@ export class Editor {
     this.idx = Math.min(n, this.root.length);
   }
 }
+
+// x², x³, x⁻¹ and x! keys; x▪ is the 'pow' template
+const BASE_KEYS = new Set(['²', '³', '⁻¹', '!']);
+// token kinds that end a value, so a following x² applies to it
+const OPERAND_END = new Set(['digit', 'point', 'var', 'value', 'close', 'postfix']);
 
 const isNumberPart = (nd) => nd.k === 'tok' && ['digit', 'point', 'exp'].includes(tokenInfo(nd.id).kind);
 

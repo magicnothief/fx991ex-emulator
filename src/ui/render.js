@@ -49,9 +49,9 @@ function renderSlot(slot, opts, root = false) {
   const row = h('span', 'm-row');
   const here = opts.cursor && opts.cursor.slot === slot;
   if (slot.length === 0 && !root) {
-    const box = h('span', 'm-slot-empty');
+    // an empty box stays visible with the cursor on its left edge (User's Guide p.8: ▮□⁄□)
     if (here) row.append(cursorEl(opts.cursorState));
-    else row.append(box);
+    row.append(h('span', 'm-slot-empty'));
     return row;
   }
   slot.forEach((nd, i) => {
@@ -87,6 +87,7 @@ function renderTemplate(nd, opts) {
     case 'e10': return h('span', 'm-row', '×10', h('span', 'm-sup', s(0)));
     case 'logab': return h('span', 'm-row', 'log', h('span', 'm-sub', s(0)), h('span', 'm-paren', '(', s(1), ')'));
     case 'abs': return h('span', 'm-abs', s(0));
+    case 'box': return s(0);
     case 'int': return h('span', 'm-int', h('span', 'm-sign', '∫'), h('span', 'm-limits', s(2), s(1)), s(0), h('span', 'm-row', 'd', h('i', 'm-var', 'x')));
     case 'diff': return h('span', 'm-diff m-row',
       h('span', 'm-frac', h('span', 'm-num', 'd'), h('span', 'm-den', 'd', h('i', 'm-var', 'x'))),
