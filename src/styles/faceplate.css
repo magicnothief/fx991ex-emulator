@@ -1,20 +1,25 @@
-/* Faceplate of the fx-991CE X in a flat 2D style, drawn at a 460×960 design size and zoomed to fit the window. */
+/* Faceplate of the fx-991CE X, drawn flat at a 460×960 design size and zoomed to fit the window.
+   Colours and positions follow CASIO's photograph of the calculator. */
 :root {
   --page: #141517;
-  --body: #2b2d31;
-  --rim: #3b3e43;
-  --fkey: #16171a;
-  --fkey-text: #fafafa;
-  --nkey: #f1f1ee;
-  --nkey-text: #26272a;
-  --bluekey: #2d6fd8;
-  --silver: #c4c6c9;
-  --shift: #e7c24b;
-  --alpha: #e9466c;
-  --basen: #3ea3ea;
-  --cmplx: #b27ddb;
-  --label-font: "Segoe UI", "Arial Narrow", Arial, sans-serif;
-  --key-font: "Segoe UI", Arial, sans-serif;
+  --rim: #dfe0e2;
+  --body: #333335;
+  --bezel: #1d1d1f;
+  --fkey: #262628;
+  --fkey-edge: #121213;
+  --fkey-text: #f4f4f4;
+  --nkey: #e8e8e9;
+  --nkey-edge: #b9b9bb;
+  --nkey-text: #1d1d1f;
+  --bluekey: #1e3f8c;
+  --bluekey-edge: #142c66;
+  --silver: #a8a9ab;
+  --shift: #cdb57a;
+  --alpha: #d07e99;
+  --basen: #6fa3d3;
+  --cmplx: #8f80d6;
+  --label-font: Bahnschrift, "DIN Alternate", "Segoe UI", Arial, sans-serif;
+  --key-font: Bahnschrift, "DIN Alternate", "Segoe UI", Arial, sans-serif;
   --math-font: "Cambria Math", Cambria, "Times New Roman", serif;
 }
 
@@ -29,195 +34,96 @@ html, body {
   -webkit-user-select: none;
 }
 
-#stage {
-  height: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
+#stage { height: 100%; display: flex; align-items: flex-start; justify-content: center; }
 
 .calc {
   position: relative;
   width: 460px;
   height: 960px;
-  border-radius: 46px 46px 64px 64px;
-  padding: 12px;
-  background: var(--body);
-  border: 3px solid var(--rim);
+  border-radius: 48px 48px 66px 66px;
+  background: var(--rim);
 }
-
-/* ---------------------------------------------------------- top: brand and solar panel */
-
-.top {
-  height: 118px;
-  display: flex;
-  justify-content: space-between;
-  padding: 22px 28px 0 34px;
+/* the face: charcoal with the fine woven texture of the real case */
+.calc::before {
+  content: "";
+  position: absolute;
+  inset: 7px 7px 11px;
+  border-radius: 42px 42px 58px 58px;
+  background-color: var(--body);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Cpath d='M0 4.5 L3 2 L6 4.5 L9 2 L12 4.5' fill='none' stroke='%233d3d40' stroke-width='1.3'/%3E%3Cpath d='M0 9.5 L3 7 L6 9.5 L9 7 L12 9.5' fill='none' stroke='%232b2b2d' stroke-width='1.3'/%3E%3C/svg%3E");
 }
+.calc > * { position: absolute; }
 
-.brand { font-family: var(--label-font); }
-.logo { color: #e6e7e9; font: 800 34px/1 "Segoe UI Black", "Arial Black", var(--label-font); letter-spacing: 1px; }
-.model { color: #e6e7e9; font-size: 15px; margin: 14px 0 0 12px; letter-spacing: .5px; }
-.series { color: #df4f6c; font-size: 17px; letter-spacing: 6px; margin: 4px 0 0 2px; font-weight: 600; }
+/* ---------------------------------------------------------- brand, solar panel, display */
 
-.solar {
-  width: 196px;
-  height: 80px;
-  border-radius: 6px;
-  background: #1a1414;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  padding: 6px;
-  gap: 2px;
-}
-.solar i { background: #3a2824; border-radius: 1px; }
+.logo { left: 58px; top: 40px; color: #e9e9ea; font: 900 27px/1 "Arial Black", "Segoe UI Black", var(--label-font); letter-spacing: 1.5px; }
+.model { left: 64px; top: 86px; color: #e2e2e3; font: 400 13px/1 var(--label-font); letter-spacing: .4px; }
+.series { left: 50px; top: 107px; color: #b6707f; font: 400 15px/1 var(--label-font); letter-spacing: 7.4px; }
+.solar { left: 198px; top: 31px; width: 207px; height: 94px; border-radius: 4px; background: #2b2120; }
 
-/* ---------------------------------------------------------- LCD frame */
+.bezel { left: 38px; top: 141px; width: 384px; height: 168px; border-radius: 12px 12px 22px 22px; background: var(--bezel); }
+.glass { left: 52px; top: 153px; width: 364px; height: 142px; border-radius: 3px; background: #c9d5ca; }
+.glass > .lcd { position: absolute; left: 10px; top: 5px; }
 
-.lcd-frame {
-  margin: 8px 18px 0;
-  height: 176px;
-  border-radius: 14px 14px 30px 30px;
-  background: #18191b;
-  padding: 13px 0 0;
-  display: flex;
-  justify-content: center;
-}
+/* ---------------------------------------------------------- keys */
 
-/* ---------------------------------------------------------- keypad */
+.keypad { inset: 0; font-family: var(--key-font); }
+.keypad > * { position: absolute; }
 
-.keypad { margin-top: 14px; padding: 0 22px; font-family: var(--key-font); }
-
-/* SHIFT ALPHA [pad] MENU ON share the 6-column grid of the function keys below */
-.ctl-row {
-  height: 118px;
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  align-items: start;
-  column-gap: 9px;
-}
-
-.ctl-row .slot { display: flex; flex-direction: column; align-items: center; }
-.ctl-row .dpad { grid-column: 3 / span 2; }
-
-.round-key {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  border: none;
-  background: var(--silver);
-  cursor: pointer;
-}
+.round-key { border: 3px solid var(--fkey-edge); border-radius: 50%; background: var(--silver); cursor: pointer; padding: 0; }
 .round-key:active, .round-key.pressed { filter: brightness(.82); }
 
-.ctl-label { font: 600 13px var(--label-font); height: 20px; letter-spacing: .3px; white-space: nowrap; }
-
-/* D-pad: a flat oval in the gap between ALPHA/CALC and MENU/∫, split into four wedges */
-.dpad {
-  position: relative;
-  justify-self: center;
-  width: 136px;
-  height: 100px;
-  margin-top: 12px;
-  border-radius: 50%;
-  background: var(--fkey);
-}
-.dpad button {
-  position: absolute;
-  inset: 3px;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  background: var(--silver);
-}
-.dpad button:active, .dpad button.pressed { filter: brightness(.82); }
-.dpad .up { clip-path: polygon(50% 50%, 3% 0, 97% 0); }
-.dpad .down { clip-path: polygon(50% 50%, 97% 100%, 3% 100%); }
-.dpad .left { clip-path: polygon(50% 50%, 0 97%, 0 3%); }
-.dpad .right { clip-path: polygon(50% 50%, 100% 3%, 100% 97%); }
-.dpad::before, .dpad::after { content: ""; position: absolute; pointer-events: none; z-index: 1; }
-/* separators between the wedges, and the centre */
-.dpad::before { inset: 0; border-radius: 50%; background:
-  linear-gradient(to top right, transparent calc(50% - 1.5px), var(--fkey) calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)),
-  linear-gradient(to top left, transparent calc(50% - 1.5px), var(--fkey) calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)); }
-.dpad::after { left: 50%; top: 50%; width: 30px; height: 22px; margin: -11px 0 0 -15px; border-radius: 50%; background: var(--fkey); }
-/* arrow marks */
-.dpad button::before { content: ""; position: absolute; width: 0; height: 0; border: 6px solid transparent; }
-.dpad .up::before { left: 50%; top: 9px; margin-left: -6px; border-bottom-color: #3a3c40; border-top-width: 0; }
-.dpad .down::before { left: 50%; bottom: 9px; margin-left: -6px; border-top-color: #3a3c40; border-bottom-width: 0; }
-.dpad .left::before { top: 50%; left: 11px; margin-top: -6px; border-right-color: #3a3c40; border-left-width: 0; }
-.dpad .right::before { top: 50%; right: 11px; margin-top: -6px; border-left-color: #3a3c40; border-right-width: 0; }
-
-/* function and number key rows */
-.krow { display: grid; column-gap: 9px; margin-bottom: 4px; }
-.krow.f6 { grid-template-columns: repeat(6, 1fr); }
-.krow.f4 { grid-template-columns: repeat(6, 1fr); margin-top: -60px; }
-.krow.f4 .spacer { pointer-events: none; }
-.krow.n5 { grid-template-columns: repeat(5, 1fr); column-gap: 12px; margin-bottom: 8px; }
-
-.kcell { display: flex; flex-direction: column; align-items: stretch; }
+.dpad svg { display: block; overflow: visible; }
+.dpad .rim { fill: #141415; stroke: #4a4a4d; stroke-width: 1; }
+.dpad .pad-key { fill: var(--silver); cursor: pointer; }
+.dpad .pad-key:active, .dpad .pad-key.pressed { filter: brightness(.82); }
+.dpad .gap { stroke: #141415; stroke-width: 5; pointer-events: none; }
+.dpad .hub { fill: #141415; pointer-events: none; }
 
 .labels {
-  height: 17px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  font: 600 11.5px/1 var(--label-font);
+  gap: 3px;
+  padding: 0 3px;
+  font: 500 11px/1 var(--label-font);
   white-space: nowrap;
-  padding: 0 1px;
+  pointer-events: none;
 }
 .labels .s { color: var(--shift); }
 .labels .a { color: var(--alpha); }
 .labels .b { color: var(--basen); }
-.labels .c { color: var(--cmplx); }
+.labels .w { color: #ececec; }
 .labels .only { margin: 0 auto; }
-.labels .bracket { color: var(--alpha); border-top: 1.5px solid var(--basen); border-left: 1.5px solid var(--basen); border-right: 1.5px solid var(--basen); padding: 0 2px; line-height: .9; }
-.labels .cbracket { color: var(--cmplx); border-top: 1.5px solid var(--cmplx); border-left: 1.5px solid var(--cmplx); border-right: 1.5px solid var(--cmplx); padding: 0 2px; line-height: .9; }
+.round-label { justify-content: center; font-weight: 600; font-size: 11.5px; }
+.labels .bracket { color: var(--alpha); border: 1.4px solid var(--basen); border-bottom: none; padding: 0 3px; line-height: .95; }
+.labels .cbracket { color: var(--cmplx); border: 1.4px solid var(--cmplx); border-bottom: none; padding: 0 3px; line-height: .95; display: inline-flex; gap: 4px; }
+.labels sup { font-size: .7em; vertical-align: .45em; line-height: 0; }
+.labels .it, .key .it { font-family: var(--math-font); font-style: italic; }
+.lfrac { display: inline-flex; flex-direction: column; align-items: center; font-size: .72em; line-height: .9; vertical-align: middle; }
+.lfrac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 1px; }
 
 .key {
-  height: 32px;
-  border: none;
-  border-radius: 9px 9px 12px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  font: 600 18px/1 var(--key-font);
+  font: 500 17px/1 var(--key-font);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 1px;
   padding: 0;
 }
-.key.fn {
-  color: var(--fkey-text);
-  background: var(--fkey);
-}
-.key.num {
-  height: 44px;
-  color: var(--nkey-text);
-  font-size: 30px;
-  font-weight: 500;
-  border-radius: 9px 9px 13px 13px;
-  background: var(--nkey);
-}
-.key.blue {
-  height: 44px;
-  color: #fff;
-  font-size: 26px;
-  font-weight: 600;
-  border-radius: 9px 9px 13px 13px;
-  background: var(--bluekey);
-}
+.key.fn { color: var(--fkey-text); background: var(--fkey); border: 2px solid var(--fkey-edge); }
+.key.num { color: var(--nkey-text); background: var(--nkey); border: 2px solid var(--nkey-edge); border-radius: 8px 8px 11px 11px; font-size: 29px; font-weight: 600; }
+.key.blue { color: #f2f4fa; background: var(--bluekey); border: 2px solid var(--bluekey-edge); border-radius: 8px 8px 11px 11px; font-size: 25px; font-weight: 600; }
 .key:active, .key.pressed { filter: brightness(.8); }
 .key.num:active, .key.num.pressed { filter: brightness(.86); }
-
-.key .it { font-family: var(--math-font); font-style: italic; font-weight: 600; }
-.key sup { font-size: .6em; margin-left: 1px; }
-.key .small { font-size: .78em; }
-.key.num .small { font-size: .62em; }
-
-/* template icons drawn on keys */
-.ico-box { display: inline-block; width: .5em; height: .62em; border: 1.6px solid currentColor; border-radius: 1px; }
-.ico-fill { display: inline-block; width: .5em; height: .62em; background: currentColor; border-radius: 1px; }
-.ico-frac { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
-.ico-frac .bar { width: .8em; height: 2px; background: currentColor; }
+.key .it { font-weight: 600; font-size: 1.12em; }
+.key sup { font-size: .58em; vertical-align: .62em; line-height: 0; margin-left: 1px; }
+.key[data-key="EXP"] { font-size: 23px; }
+.key[data-key="ANS"] { font-size: 23px; }
+.ico { display: inline-block; vertical-align: middle; overflow: visible; }
+.labels .ico { vertical-align: -.12em; }
 
 .toast {
   position: fixed;

@@ -1,13 +1,11 @@
-/* The fx-991EX dot-matrix LCD is 192×63 pixels; --lp is one LCD pixel. */
+/* The fx-991CE X display: a status line above a 192×63 dot matrix (192×75 pixels in all); --lp is one LCD pixel. */
 .lcd {
-  --lp: 1.86px;
+  --lp: 1.75px;
   --ink: #1b1d16;
-  --glass: #a7ab90;
+  --glass: #c9d5ca;
   position: relative;
   width: calc(var(--lp) * 192);
-  height: calc(var(--lp) * 63 + 2px);
-  margin-top: calc(var(--lp) * 4);
-  background: var(--glass);
+  height: calc(var(--lp) * 75);
   color: var(--ink);
   overflow: hidden;
   font-family: var(--math-font);
