@@ -1,23 +1,25 @@
 // MENU, SETUP, RESET, CONST, CONV, QR and the OPTN submenus shared by all modes.
 import { h } from '../../ui/render.js';
+import { menuIcon } from '../../ui/menuicons.js';
 import { Menu, Message, Confirm, DigitPrompt, page, item, closeMenus } from './common.js';
 import { CONSTANT_GROUPS, CONSTANT_PAGES, CONVERSION_GROUPS, CONVERSION_PAGES } from '../../core/constants.js';
 import { MENU_KEY } from '../keymap.js';
 import { t, setLanguage, LANGUAGES } from '../i18n.js';
 
+// In MENU order; ui/menuicons.js draws the icons in the same order.
 export const MODE_LIST = [
-  { id: 'calc', label: 'Calculate', icon: '×÷\n+−' },
-  { id: 'cmplx', label: 'Complex', icon: 'i∠' },
-  { id: 'base', label: 'Base-N', icon: '2 8\n10 16' },
-  { id: 'matrix', label: 'Matrix', icon: '[▫▫]' },
-  { id: 'vector', label: 'Vector', icon: '↗' },
-  { id: 'stat', label: 'Statistics', icon: '▁▃▆' },
-  { id: 'dist', label: 'Distribution', icon: '⌒' },
-  { id: 'sheet', label: 'Spreadsheet', icon: '▦' },
-  { id: 'table', label: 'Table', icon: '▤' },
-  { id: 'eqn', label: 'Equation/Func', icon: 'x=' },
-  { id: 'ineq', label: 'Inequality', icon: 'x>' },
-  { id: 'ratio', label: 'Ratio', icon: 'A:B' },
+  { id: 'calc', label: 'Calculate' },
+  { id: 'cmplx', label: 'Complex' },
+  { id: 'base', label: 'Base-N' },
+  { id: 'matrix', label: 'Matrix' },
+  { id: 'vector', label: 'Vector' },
+  { id: 'stat', label: 'Statistics' },
+  { id: 'dist', label: 'Distribution' },
+  { id: 'sheet', label: 'Spreadsheet' },
+  { id: 'table', label: 'Table' },
+  { id: 'eqn', label: 'Equation/Func' },
+  { id: 'ineq', label: 'Inequality' },
+  { id: 'ratio', label: 'Ratio' },
 ];
 const MODE_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C'];
 
@@ -54,7 +56,7 @@ class MainMenu {
     const firstRow = Math.min(Math.max(0, Math.floor(this.sel / 4) - 1), 1);
     const icons = MODE_LIST.slice(firstRow * 4, firstRow * 4 + 8).map((m, j) => {
       const idx = firstRow * 4 + j;
-      return h('div', `icon${idx === this.sel ? ' sel' : ''}`, h('span', null, m.icon.split('\n').map((l, k) => [k ? h('br') : null, l])), h('span', 'num', MODE_KEYS[idx]));
+      return h('div', 'icon', menuIcon(idx, MODE_KEYS[idx], idx === this.sel));
     });
     const el = h('div', 'mainmenu', h('div', 'icons', icons), h('div', 'label', `${MODE_KEYS[this.sel]}:${t(MODE_LIST[this.sel].label)}`));
     return { el, status: { noMath: true } };

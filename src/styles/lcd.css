@@ -139,11 +139,11 @@
 .scrollbar { position: absolute; right: calc(var(--lp) * 1); width: calc(var(--lp) * 2); background: var(--ink); border-radius: calc(var(--lp) * 1); }
 .title { font-weight: 700; }
 
-.mainmenu { position: absolute; inset: 0; padding: calc(var(--lp) * 1) calc(var(--lp) * 3); }
-.mainmenu .icons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: calc(var(--lp) * 1.5); column-gap: calc(var(--lp) * 3); }
-.mainmenu .icon { position: relative; height: calc(var(--lp) * 17); text-align: center; line-height: 1.05; border: calc(var(--lp) * .7) solid var(--ink); border-radius: calc(var(--lp) * 1.5); display: flex; align-items: center; justify-content: center; font: 700 calc(var(--lp) * 7.5)/1 "Segoe UI", Arial, sans-serif; }
-.mainmenu .icon.sel { background: var(--ink); color: var(--glass); }
-.mainmenu .icon .num { position: absolute; right: calc(var(--lp) * -3.4); bottom: calc(var(--lp) * -1.2); font-size: calc(var(--lp) * 5.5); color: var(--ink); background: var(--glass); padding: 0 1px; }
+.mainmenu { position: absolute; inset: 0; }
+/* 47×23-pixel cells on the calculator's 48×24 grid (ui/menuicons.js draws each cell pixel for pixel) */
+.mainmenu .icons { position: absolute; left: calc(var(--lp) * 1); top: 0; display: grid; grid-template-columns: repeat(4, calc(var(--lp) * 47)); grid-auto-rows: calc(var(--lp) * 23); gap: calc(var(--lp) * 1); }
+.mainmenu .icon { color: var(--ink); }
+.mainmenu .icon svg { display: block; width: 100%; height: 100%; }
 .mainmenu .label { position: absolute; left: calc(var(--lp) * 3); bottom: calc(var(--lp) * 1); font: 600 calc(var(--lp) * 10)/1 "Consolas", "Courier New", monospace; }
 
 /* ---------------------------------------------------------- grids (matrix, statistics, table, spreadsheet) */

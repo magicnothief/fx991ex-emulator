@@ -10,6 +10,7 @@ Hungarian strings marked `//?` in `src/calc/i18n.js` are not yet confirmed again
 
 Not affiliated with or endorsed by CASIO. CASIO and ClassWiz are trademarks of CASIO Computer Co., Ltd.
 This is a clean-room re-implementation built from the public User's Guide; it contains no CASIO ROM or code.
+The MENU icons are drawn pixel for pixel from the User's Guide illustrations so the screen matches the calculator.
 
 ## Installing
 
