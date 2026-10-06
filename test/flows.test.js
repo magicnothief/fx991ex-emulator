@@ -181,6 +181,8 @@ test('fx-991CE X calculation results observed on the physical unit', () => {
   assert.equal(r('SHIFT MENU 3 1 2 AC 1 EXP 1 2 EQ'), '1×10^12'); // C17
   assert.equal(r('SHIFT 4 2 2 1 EQ'), '44.955908'); // ATOMIC, User's Guide HU p.39
   assert.equal(keys(fresh(), 'AC SHIFT X ALPHA RP RIGHT 1 DOT 5 RIGHT 3 EQ').top.kind, 'Argument ERROR'); // G12
+  assert.equal(keys(fresh(), 'SHIFT 4 2 1 1 9 EQ').top.kind, 'Syntax ERROR'); // U33
+  assert.equal(r('SHIFT 4 2 4 3 EQ'), '97'); // U31
   assert.equal(keys(fresh(), 'MENU 2 LP 1 ADD ENG RP POW 0 DOT 5 EQ').top.kind, 'Math ERROR'); // I14
   assert.equal(keys(fresh(), 'AC 2 POW 3 RIGHT POW 2 EQ').top.kind, 'Syntax ERROR'); // A09
 });

@@ -254,7 +254,7 @@ function call(node, ctx, sub) {
     case 'AtWt': {
       if (ctx.baseMode) fail(ERR.SYNTAX);
       const z = r(0);
-      if (!N.isInt(z) || z.d.lt(1) || z.d.gt(ELEMENTS.length)) fail(ERR.ARGUMENT);
+      if (!N.isInt(z) || z.d.lt(1) || z.d.gt(ELEMENTS.length)) fail(ERR.SYNTAX);
       return N.fromDec(new N.D(ELEMENTS[N.toNumber(z) - 1].weight));
     }
     case 'RanInt#': return N.ranInt(r(0), r(1));

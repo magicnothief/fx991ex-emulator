@@ -42,7 +42,7 @@ export class Calculator {
     this.power = true;
     this.screens = [];
     this.load();
-    setLanguage(this.setup.language);
+    this.setup.language = setLanguage(this.setup.language);
     this.enterMode(this.mode);
   }
 

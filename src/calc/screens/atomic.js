@@ -2,47 +2,57 @@
 import { h } from '../../ui/render.js';
 import { ELEMENTS, position } from '../../core/elements.js';
 import { Menu, page, item, closeMenus } from './common.js';
+import { t } from '../i18n.js';
 
-const AT = new Map(ELEMENTS.map((e) => [`${position(e.z).row},${position(e.z).col}`, e]));
-const ROW_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+// Group 3 of periods 6 and 7 holds the lanthanoid (L) and actinoid (A) series cells; the series rows
+// below the table are marked with the same letters.
+const SERIES = [
+  { row: 6, col: 3, letter: 'L', range: '57~71', name: 'Lanth', labelRow: 8 },
+  { row: 7, col: 3, letter: 'A', range: '89~103', name: 'Actin', labelRow: 9 },
+];
+const key = (row, col) => `${row},${col}`;
+const CELLS = new Map([
+  ...ELEMENTS.map((e) => { const p = position(e.z); return [key(p.row, p.col), e]; }),
+  ...SERIES.map((sr) => [key(sr.row, sr.col), sr]),
+]);
+const ROWS = 9;
 
 class PeriodicTable {
   constructor(calc, apply) {
     this.calc = calc;
     this.apply = apply;
-    this.z = 1;
+    this.row = 1;
+    this.col = 1;
     this.isMenu = true;
   }
 
-  at(row, col) { return AT.get(`${row},${col}`); }
-
-  /** ◀▶ move to the next element in the row; ▲▼ to the nearest element in the next row. */
+  /** ◀▶ move to the next cell in the row; ▲▼ to the nearest cell in the next row. */
   move(dir) {
-    const { row, col } = position(this.z);
     if (dir === 'left' || dir === 'right') {
       const step = dir === 'right' ? 1 : -1;
-      for (let c = col + step; c >= 1 && c <= 18; c += step) {
-        const e = this.at(row, c);
-        if (e) { this.z = e.z; return; }
+      for (let c = this.col + step; c >= 1 && c <= 18; c += step) {
+        if (CELLS.has(key(this.row, c))) { this.col = c; return; }
       }
       return;
     }
-    const i = ROW_ORDER.indexOf(row) + (dir === 'down' ? 1 : -1);
-    if (i < 0 || i >= ROW_ORDER.length) return;
-    const target = ROW_ORDER[i];
+    const row = this.row + (dir === 'down' ? 1 : -1);
+    if (row < 1 || row > ROWS) return;
     for (let d = 0; d < 18; d++) {
-      const e = this.at(target, col - d) || this.at(target, col + d);
-      if (e) { this.z = e.z; return; }
+      for (const c of [this.col - d, this.col + d]) {
+        if (CELLS.has(key(row, c))) { this.row = row; this.col = c; return; }
+      }
     }
   }
 
   handle(ev) {
+    const cell = CELLS.get(key(this.row, this.col));
     switch (ev.action) {
       case 'left': case 'right': case 'up': case 'down': this.move(ev.action); return true;
       case 'eq':
+        if (!cell.z) return true; // a series cell has no atomic weight
         closeMenus(this.calc);
         this.apply('tok:AtWt');
-        for (const d of String(this.z)) this.apply(`tok:${d}`);
+        for (const d of String(cell.z)) this.apply(`tok:${d}`);
         return true;
       case 'ac': closeMenus(this.calc); return true;
       default: return true;
@@ -50,20 +60,25 @@ class PeriodicTable {
   }
 
   view() {
-    const e = ELEMENTS[this.z - 1];
+    const sel = CELLS.get(key(this.row, this.col));
     const table = h('div', 'ptable');
-    for (const row of ROW_ORDER) {
+    const place = (el, row, col) => {
+      el.style.gridRow = String(row + (row >= 8 ? 1 : 0));
+      el.style.gridColumn = String(col);
+      table.append(el);
+    };
+    for (let row = 1; row <= ROWS; row++) {
       for (let col = 1; col <= 18; col++) {
-        const el = this.at(row, col);
-        const cell = h('div', `pt-cell${el ? ' on' : ''}${el && el.z === this.z ? ' sel' : ''}`);
-        cell.style.gridRow = String(row + (row >= 8 ? 1 : 0));
-        cell.style.gridColumn = String(col);
-        table.append(cell);
+        const cell = CELLS.get(key(row, col));
+        if (cell) place(h('div', `pt-cell on${cell === sel ? ' sel' : ''}`, cell.letter ?? null), row, col);
       }
     }
-    const weight = e.bracket ? `[${e.weight}]` : e.weight.replace('.', ',');
-    const info = h('div', 'pt-info', h('div', 'pt-z', String(e.z)), h('div', 'pt-sym', e.symbol), h('div', 'pt-w', weight));
-    return { el: h('div', 'ptable-screen', table, info), status: { noMath: true } };
+    for (const sr of SERIES) place(h('div', 'pt-cell pt-label', sr.letter), sr.labelRow, 2);
+    const info = sel.z
+      ? [String(sel.z), sel.symbol, sel.bracket ? `[${sel.weight}]` : sel.weight.replace('.', ',')]
+      : [sel.range, t(sel.name), ''];
+    const panel = h('div', 'pt-info', h('div', 'pt-z', info[0]), h('div', 'pt-sym', info[1]), h('div', 'pt-w', info[2]));
+    return { el: h('div', 'ptable-screen', table, panel), status: { noMath: true } };
   }
 }
 

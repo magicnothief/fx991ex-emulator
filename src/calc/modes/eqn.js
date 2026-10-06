@@ -245,7 +245,7 @@ class IneqResult {
     const lt = (inc) => h('span', 'm-op', inc ? '≤' : '<');
     const parts = [];
     r.forEach((s, i) => {
-      if (i) parts.push(h('span', 'm-op', ','));
+      if (i) parts.push(h('span', 'm-op', ';'));
       if (s.point) parts.push(x(), h('span', 'm-op', '='), m(s.point));
       else if (s.ne) parts.push(x(), h('span', 'm-op', '≠'), m(s.ne));
       else {

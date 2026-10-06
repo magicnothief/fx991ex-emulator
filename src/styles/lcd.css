@@ -164,6 +164,9 @@
 .pt-cell { width: 100%; height: 100%; }
 .pt-cell.on { border: calc(var(--lp) * .5) solid var(--ink); margin: 0 calc(var(--lp) * -.25) calc(var(--lp) * -.25) 0; }
 .pt-cell.sel { background: var(--ink); }
+.pt-cell { display: flex; align-items: center; justify-content: center; font: 600 calc(var(--lp) * 4.4)/1 var(--math-font); }
+.pt-cell.sel { color: var(--glass); }
+.pt-label { border: none; }
 .pt-info { position: absolute; right: calc(var(--lp) * 3); top: calc(var(--lp) * 10); text-align: right; font-family: var(--math-font); }
 .pt-z, .pt-sym { font-size: calc(var(--lp) * 11); line-height: 1.1; }
 .pt-w { font-size: calc(var(--lp) * 7.5); margin-top: calc(var(--lp) * 3); }

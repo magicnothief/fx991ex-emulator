@@ -4,7 +4,8 @@ A Windows desktop emulator of the CASIO fx-991CE X ClassWiz scientific calculato
 edition of the fx-991EX), for teaching: students and teacher press the same keys and get the same screens and
 answers. Like the physical calculator it shows Hungarian menus and messages, a decimal comma, `;` as the argument
 separator, `tg` for tangent, CODATA 2014 constants and the ATOMIC (periodic table / atomic weight) menu.
-English can be selected under SETUP ▸ Language as an extra; the physical calculator's language list may differ.
+SETUP ▸ Language offers the same list as the calculator (Cesky, Magyar, Polski, Slovensky); only Magyar is
+translated so far, the other three show English text.
 Hungarian strings marked `//?` in `src/calc/i18n.js` are not yet confirmed against the device.
 
 Not affiliated with or endorsed by CASIO. CASIO and ClassWiz are trademarks of CASIO Computer Co., Ltd.
@@ -76,7 +77,7 @@ number formats. `npm test` checks the worked examples from the User's Guide.
 
 ## Checking parity against a physical calculator
 
-`npm run parity` runs 447 key sequences (taken from the User's Guide examples and from areas where the guide is
+`npm run parity` runs 454 key sequences (taken from the User's Guide examples and from areas where the guide is
 silent) through the emulator from a fresh Initialize All each, and writes `parity/parity-sheet.html`: every test
 with its keys drawn as keycaps, the emulator's screen, and Same/Differs toggles with a note field. Run the same keys
 on a physical fx-991CE X and mark each test. The cases live in `tools/parity/cases.mjs`; rerun the command after

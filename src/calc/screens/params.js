@@ -117,8 +117,12 @@ export class ListScreen {
   handle(ev) {
     const vis = this.visible;
     switch (ev.action) {
-      case 'up': this.top = Math.max(0, this.top - 1); break;
-      case 'down': this.top = Math.min(Math.max(0, this.rows.length - vis), this.top + 1); break;
+      case 'up': this.top = Math.max(0, this.top - (this.dense ? vis : 1)); break;
+      case 'down':
+        this.top = this.dense
+          ? Math.min(Math.floor((this.rows.length - 1) / vis) * vis, this.top + vis)
+          : Math.min(Math.max(0, this.rows.length - vis), this.top + 1);
+        break;
       case 'ac': this.calc.pop(); this.onClose?.(); break;
       case 'eq': if (this.onEq) this.onEq(); else { this.calc.pop(); this.onClose?.(); } break;
       default: return /^(menu|setup|reset|qr)$/.test(ev.action || '') ? false : true;

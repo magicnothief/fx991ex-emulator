@@ -253,7 +253,7 @@ export const SECTIONS = [
       t('sin of a typed 15-digit π', 'AC SIN 3 DOT 1 4 1 5 9 2 6 5 3 5 8 9 7 9 RP EQ', { core: true }),
       t('d/dx sin x at π/2 (p.15)', 'AC SHIFT INT SIN ALPHA RP RP RIGHT SHIFT EXP DIV 2 EQ', { manual: '0', core: true }),
       t('∫₀^π sin x dx', 'AC INT SIN ALPHA RP RP RIGHT 0 RIGHT SHIFT EXP EQ', { core: true }),
-      t('Pol(1, 1) in Radian', 'AC SHIFT ADD 1 SHIFT RP 1 RP EQ'),
+      t('Pol(1, 1) in Radian', `AC ${angle(2)} SHIFT ADD 1 SHIFT RP 1 RP EQ`), // sets Radian itself so it can be rerun alone
       t('Gradian: sin 50', `AC ${angle(3)} SIN 5 0 RP EQ`, { core: true }),
       t('Gradian: cos 100', `AC ${angle(3)} COS 1 0 0 RP EQ`),
       t('Gradian: 90° in grads', `AC ${angle(3)} 9 0 OPTN 2 1 EQ`),
@@ -297,7 +297,7 @@ export const SECTIONS = [
       t('SOLVE sin x = 0.5 from 10', 'AC SIN ALPHA RP RP ALPHA CALC 0 DOT 5 SHIFT CALC 1 0 EQ EQ', { core: true }),
       t('SOLVE with no variable (p.38)', 'AC 2 ADD 3 SHIFT CALC', { manual: 'Variable ERROR' }),
       t('SOLVE x²+1=0 (no real root)', 'AC ALPHA RP SQR ADD 1 SHIFT CALC 1 EQ EQ', { core: true }),
-      t('SOLVE prompt screen', 'AC ALPHA RP SQR SUB 4 SHIFT CALC'),
+      t('SOLVE prompt screen (after Memory reset)', 'AC SHIFT 9 2 EQ AC ALPHA RP SQR SUB 4 SHIFT CALC'), // x=0 regardless of earlier tests
     ],
   },
   {
@@ -592,6 +592,13 @@ export const SECTIONS = [
       t('AtWt 1 + AtWt 8 × 2', 'AC SHIFT 4 2 1 ADD SHIFT 4 2 8 MUL 2 EQ'),
       t('AtWt 119', 'AC SHIFT 4 2 1 1 9 EQ'),
       t('ATOMIC in Base-N', 'MENU 3 SHIFT 4'),
+      t('Periodic table: lanthanoid cell (▼×5 ▶▶)', 'AC SHIFT 4 1 DOWN DOWN DOWN DOWN DOWN RIGHT RIGHT'),
+      t('Periodic table: ▼▼ from the lanthanoid cell', 'AC SHIFT 4 1 DOWN DOWN DOWN DOWN DOWN RIGHT RIGHT DOWN DOWN'),
+      t('AtWt 61 (Pm)', 'AC SHIFT 4 2 6 1 EQ'),
+      t('AtWt 84 (Po)', 'AC SHIFT 4 2 8 4 EQ'),
+      t('AtWt 103 (Lr)', 'AC SHIFT 4 2 1 0 3 EQ'),
+      t('AtWt 118 (Og)', 'AC SHIFT 4 2 1 1 8 EQ'),
+      t('AtWt 0', 'AC SHIFT 4 2 0 EQ'),
     ],
   },
 ];

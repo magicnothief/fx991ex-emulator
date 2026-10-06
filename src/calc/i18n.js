@@ -41,7 +41,7 @@ const HU = {
   'Dimension?': 'Dimenzió?', //?
   'Select 1~4': 'Válasszon: 1~4', //?
   'Select 2~3': 'Válasszon: 2~3', //?
-  'Select 2~4': 'Válasszon: 2~4', //?
+  'Select 2~4': '2~4 választ',
   // statistics and distribution
   'Select Type': 'Típus választás', '1-Variable': '1 változós', Editor: 'Szerkesztő', 'Insert Row': 'Sor beilleszt',
   'Delete All': 'Mindent töröl', '1-Variable Calc': '1-változós stat', '2-Variable Calc': '2-változós stat',
@@ -56,8 +56,8 @@ const HU = {
   'Simul Equation': 'Szimult egyenl', Polynomial: 'Polinom', 'No Solution': 'Nincs megoldás',
   'All Real Numbers': 'Minden valós szám',
   'Number of Unknowns?': 'Ismeretlenek száma?', //?
-  'Degree?': 'Fokszám?', //?
-  'Infinite Solution': 'Végtelen sok megoldás', //?
+  'Degree?': 'Foka?',
+  'Infinite Solution': 'Végtelen megoldás',
   'No Real Roots': 'Nincs valós gyök', //?
   // spreadsheet
   'Fill Formula': 'Kitölt képlet', 'Fill Value': 'Kitölt értékkel', 'Edit Cell': 'Cella szerkeszt',
@@ -72,7 +72,7 @@ const HU = {
   'Physico-Chem': 'Fiziko-kémia', 'Adopted Values': 'Vál értékek', Other: 'Egyéb',
   Length: 'Hossz', Area: 'Terület', Volume: 'Térfogat', Mass: 'Tömeg', Pressure: 'Nyomás',
   Energy: 'Energia', Power: 'Teljesítmény', Temperature: 'Hőmérséklet',
-  'Periodic Table': 'Periód tábla', 'Atomic Weight': 'Atomtömeg',
+  'Periodic Table': 'Periód tábla', 'Atomic Weight': 'Atomtömeg', 'Lanth': 'Lant', 'Actin': 'Akti',
   // errors and screens
   'Math ERROR': 'Matematikai HIBA', 'Stack ERROR': 'Verem HIBA', 'Syntax ERROR': 'Szintaktikai HIBA',
   'Argument ERROR': 'Argumentum HIBA', 'Dimension ERROR': 'Dimenzió HIBA', 'Variable ERROR': 'Változó HIBA',
@@ -86,10 +86,13 @@ const HU = {
 const DICTS = { hu: HU };
 let current = 'hu';
 
-export const LANGUAGES = [['Magyar', 'hu'], ['English', 'en']];
+// The fx-991CE X language list. Only Hungarian is translated; the others show the English base strings.
+export const LANGUAGES = [['Cesky', 'cs'], ['Magyar', 'hu'], ['Polski', 'pl'], ['Slovensky', 'sk']];
 
+/** Selects the display language; anything not on the list (e.g. an older saved 'en') becomes Magyar. */
 export function setLanguage(lang) {
-  current = DICTS[lang] || lang === 'en' ? lang : 'hu';
+  current = LANGUAGES.some(([, id]) => id === lang) ? lang : 'hu';
+  return current;
 }
 
 /**
