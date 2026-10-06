@@ -1,0 +1,61 @@
+{
+  "name": "fx991ex-emulator",
+  "productName": "fx-991EX Emulator",
+  "version": "1.0.0",
+  "description": "Desktop emulator of the CASIO fx-991EX ClassWiz scientific calculator",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "author": "fx-991EX Emulator contributors",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder --win nsis",
+    "release": "electron-builder --win nsis --publish always",
+    "parity": "node tools/parity/build.mjs"
+  },
+  "build": {
+    "appId": "com.fx991ex.emulator",
+    "productName": "fx-991EX Emulator",
+    "files": [
+      "electron/**",
+      "src/**",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "fx-991EX-Emulator-Setup-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "magicnothief",
+        "repo": "fx991ex-emulator"
+      }
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "dependencies": {
+    "decimal.js": "^10.6.0",
+    "electron-updater": "^6.8.9"
+  },
+  "devDependencies": {
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/magicnothief/fx991ex-emulator.git"
+  }
+}

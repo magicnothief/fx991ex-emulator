@@ -1,0 +1,178 @@
+/* The fx-991EX dot-matrix LCD is 192×63 pixels; --lp is one LCD pixel. */
+.lcd {
+  --lp: 1.86px;
+  --ink: #1b1d16;
+  --glass: #a7ab90;
+  position: relative;
+  width: calc(var(--lp) * 192);
+  height: calc(var(--lp) * 63 + 2px);
+  margin-top: calc(var(--lp) * 4);
+  background: linear-gradient(180deg, #b0b49a, var(--glass) 40%, #a2a68b);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,.45);
+  color: var(--ink);
+  overflow: hidden;
+  font-family: var(--math-font);
+}
+.lcd.off > * { visibility: hidden; }
+
+.status {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(var(--lp) * 8);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--lp) * 3);
+  padding: 0 calc(var(--lp) * 2);
+  font: 700 calc(var(--lp) * 6.4)/1 "Segoe UI", Arial, sans-serif;
+  white-space: nowrap;
+}
+.status .ind { display: inline-block; }
+.status .boxed { background: var(--ink); color: var(--glass); padding: 0 calc(var(--lp) * .8); border-radius: 1px; }
+.status .spacer { flex: 1; }
+.status .math { font-family: var(--math-font); font-style: italic; }
+
+.screen {
+  position: absolute;
+  top: calc(var(--lp) * 8);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  font-size: calc(var(--lp) * 11);
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------- calculation screen */
+
+.expr-area {
+  position: absolute;
+  left: calc(var(--lp) * 2);
+  right: calc(var(--lp) * 2);
+  top: calc(var(--lp) * 1);
+  height: calc(var(--lp) * 34);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.expr-area.line { white-space: normal; word-break: break-all; font-family: "Consolas", "Courier New", monospace; font-size: calc(var(--lp) * 9.5); line-height: calc(var(--lp) * 11); height: calc(var(--lp) * 33); }
+.expr-scroll { display: inline-flex; align-items: center; min-height: calc(var(--lp) * 18); }
+.expr-area.line .expr-scroll { display: inline; }
+
+.result-area {
+  position: absolute;
+  right: calc(var(--lp) * 2);
+  left: calc(var(--lp) * 2);
+  bottom: calc(var(--lp) * 1);
+  min-height: calc(var(--lp) * 12);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  white-space: nowrap;
+}
+.result-area.line { font-family: "Consolas", "Courier New", monospace; font-size: calc(var(--lp) * 10); }
+.scroll-mark { position: absolute; font-size: calc(var(--lp) * 7); top: calc(var(--lp) * 1); }
+.scroll-mark.r { right: 0; }
+.scroll-mark.l { left: 0; }
+
+/* ---------------------------------------------------------- natural display layout */
+
+.m-row { display: inline-flex; align-items: center; }
+.m-var { font-style: italic; }
+.m-op { padding: 0 calc(var(--lp) * .6); }
+.m-neg { padding-right: calc(var(--lp) * .2); }
+.m-slot-empty {
+  display: inline-block;
+  width: calc(var(--lp) * 6);
+  height: calc(var(--lp) * 8);
+  border: calc(var(--lp) * .7) dotted var(--ink);
+  vertical-align: middle;
+}
+.m-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 calc(var(--lp) * .8); }
+.m-frac > .m-num { padding: 0 calc(var(--lp) * .6) calc(var(--lp) * .8); border-bottom: calc(var(--lp) * .9) solid var(--ink); min-width: 100%; text-align: center; display: flex; justify-content: center; }
+.m-frac > .m-den { padding: calc(var(--lp) * .8) calc(var(--lp) * .6) 0; display: flex; justify-content: center; }
+.m-mixed { display: inline-flex; align-items: center; }
+.m-sup { font-size: .68em; align-self: flex-start; margin-top: calc(var(--lp) * -2); display: inline-flex; align-items: center; }
+.m-sub { font-size: .68em; align-self: flex-end; margin-bottom: calc(var(--lp) * -2); display: inline-flex; align-items: center; }
+.m-root { display: inline-flex; align-items: stretch; margin: 0 calc(var(--lp) * .4); }
+.m-root .m-index { font-size: .6em; align-self: flex-start; margin-right: calc(var(--lp) * -2.5); margin-top: calc(var(--lp) * -.5); }
+.m-root .m-radical { font-size: 1.15em; line-height: 1; align-self: flex-end; transform: scaleY(1.1); margin-right: calc(var(--lp) * -.3); }
+.m-root .m-radicand { border-top: calc(var(--lp) * .9) solid var(--ink); padding: calc(var(--lp) * 1) calc(var(--lp) * .5) 0; display: inline-flex; align-items: center; }
+.m-abs { display: inline-flex; align-items: center; border-left: calc(var(--lp) * .9) solid var(--ink); border-right: calc(var(--lp) * .9) solid var(--ink); padding: 0 calc(var(--lp) * 1); margin: 0 calc(var(--lp) * .6); }
+.m-int { display: inline-flex; align-items: center; }
+.m-int .m-sign { font-size: 1.6em; line-height: 1; }
+.m-limits { display: inline-flex; flex-direction: column; justify-content: space-between; font-size: .62em; align-self: stretch; margin-right: calc(var(--lp) * 1); }
+.m-sum { display: inline-flex; align-items: center; }
+.m-sum .m-stack { display: inline-flex; flex-direction: column; align-items: center; font-size: .62em; }
+.m-sum .m-sign { font-size: 1.5em; line-height: 1; }
+.m-diff .m-at { display: inline-flex; align-items: stretch; }
+.m-diff .m-bar { border-left: calc(var(--lp) * .8) solid var(--ink); margin: 0 calc(var(--lp) * .6); }
+.m-paren { display: inline-flex; align-items: center; }
+
+.cursor {
+  display: inline-block;
+  width: calc(var(--lp) * 1);
+  height: calc(var(--lp) * 10);
+  margin: 0 calc(var(--lp) * -.5);
+  background: var(--ink);
+  vertical-align: middle;
+  position: relative;
+  z-index: 1;
+}
+.cursor.over { height: calc(var(--lp) * 1); width: calc(var(--lp) * 6); margin: 0; align-self: flex-end; }
+.cursor.block { width: calc(var(--lp) * 5); }
+.cursor.blink-off { visibility: hidden; }
+
+/* ---------------------------------------------------------- menus and lists */
+
+.menu {
+  position: absolute;
+  inset: 0;
+  font: 600 calc(var(--lp) * 10)/calc(var(--lp) * 13.5) "Consolas", "Lucida Console", "Courier New", monospace;
+  padding: 0 calc(var(--lp) * 6) 0 calc(var(--lp) * 2);
+  letter-spacing: calc(var(--lp) * -.1);
+}
+.menu.small { font-size: calc(var(--lp) * 8.2); line-height: calc(var(--lp) * 10.8); }
+.menu .item { white-space: nowrap; overflow: hidden; height: calc(var(--lp) * 13.5); }
+.menu.small .item { height: calc(var(--lp) * 10.8); }
+.menu .grid { display: grid; column-gap: calc(var(--lp) * 4); }
+.menu .sel, .inv { background: var(--ink); color: var(--glass); }
+.menu .back { position: absolute; right: calc(var(--lp) * 1); top: calc(var(--lp) * -7); font-size: calc(var(--lp) * 7); }
+.scrollbar { position: absolute; right: calc(var(--lp) * 1); width: calc(var(--lp) * 2); background: var(--ink); border-radius: 1px; }
+.title { font-weight: 700; }
+
+.mainmenu { position: absolute; inset: 0; padding: calc(var(--lp) * 1) calc(var(--lp) * 3); }
+.mainmenu .icons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: calc(var(--lp) * 1.5); column-gap: calc(var(--lp) * 3); }
+.mainmenu .icon { position: relative; height: calc(var(--lp) * 17); text-align: center; line-height: 1.05; border: calc(var(--lp) * .7) solid var(--ink); border-radius: calc(var(--lp) * 1.5); display: flex; align-items: center; justify-content: center; font: 700 calc(var(--lp) * 7.5)/1 "Segoe UI", Arial, sans-serif; }
+.mainmenu .icon.sel { background: var(--ink); color: var(--glass); }
+.mainmenu .icon .num { position: absolute; right: calc(var(--lp) * -3.4); bottom: calc(var(--lp) * -1.2); font-size: calc(var(--lp) * 5.5); color: var(--ink); background: var(--glass); padding: 0 1px; }
+.mainmenu .label { position: absolute; left: calc(var(--lp) * 3); bottom: calc(var(--lp) * 1); font: 600 calc(var(--lp) * 10)/1 "Consolas", "Courier New", monospace; }
+
+/* ---------------------------------------------------------- grids (matrix, statistics, table, spreadsheet) */
+
+.grid-screen { position: absolute; inset: 0; font: 600 calc(var(--lp) * 7.6)/1 "Consolas", "Courier New", monospace; }
+.grid-screen table { border-collapse: collapse; table-layout: fixed; }
+.grid-screen td, .grid-screen th { height: calc(var(--lp) * 8.6); padding: 0 calc(var(--lp) * 1); text-align: right; overflow: hidden; white-space: nowrap; font-weight: 600; }
+.grid-screen th { font-weight: 600; font-size: calc(var(--lp) * 6.5); text-align: center; }
+.grid-screen td.rowno { text-align: left; font-size: calc(var(--lp) * 6); width: calc(var(--lp) * 8); border-right: calc(var(--lp) * .6) solid var(--ink); }
+.grid-screen td.cell { border-right: calc(var(--lp) * .5) solid var(--ink); }
+.grid-screen td.sel { background: var(--ink); color: var(--glass); }
+.grid-screen .footer { position: absolute; left: calc(var(--lp) * 2); right: calc(var(--lp) * 2); bottom: calc(var(--lp) * .5); height: calc(var(--lp) * 12); display: flex; align-items: center; justify-content: flex-end; font-family: var(--math-font); font-size: calc(var(--lp) * 10); white-space: nowrap; overflow: hidden; }
+.grid-screen .footer.edit { justify-content: flex-start; }
+.grid-screen .side { position: absolute; right: calc(var(--lp) * 1); top: 0; font: 600 calc(var(--lp) * 9)/1.15 "Consolas", monospace; text-align: right; }
+
+.mat-title { position: absolute; left: calc(var(--lp) * 2); top: 0; font-size: calc(var(--lp) * 7.5); }
+.grid-screen .matrix { position: absolute; left: calc(var(--lp) * 14); top: calc(var(--lp) * 8); }
+.grid-screen .matrix td { height: calc(var(--lp) * 9.5); font-size: calc(var(--lp) * 8.5); text-align: right; padding: 0 calc(var(--lp) * 2); }
+.matrix { display: inline-flex; align-items: stretch; }
+.matrix .br { width: calc(var(--lp) * 2.5); border: calc(var(--lp) * .9) solid var(--ink); }
+.matrix .br.l { border-right: none; }
+.matrix .br.r { border-left: none; }
+.matrix table td { padding: 0 calc(var(--lp) * 2); text-align: right; height: calc(var(--lp) * 10); font-size: calc(var(--lp) * 8.5); }
+
+.message { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding-left: calc(var(--lp) * 4); font: 600 calc(var(--lp) * 10)/calc(var(--lp) * 13) "Consolas", "Courier New", monospace; }
+.message .big { font-size: calc(var(--lp) * 11); }
+
+.kv { position: absolute; inset: 0; font: 600 calc(var(--lp) * 10)/calc(var(--lp) * 13.5) "Consolas", "Courier New", monospace; padding: 0 calc(var(--lp) * 3); }
+.kv .row { display: flex; justify-content: space-between; white-space: nowrap; height: calc(var(--lp) * 13.5); align-items: center; }
+.kv .row .v { font-family: var(--math-font); display: inline-flex; align-items: center; }
+.kv.small { font-size: calc(var(--lp) * 8.4); line-height: calc(var(--lp) * 11); }
+.kv.small .row { height: calc(var(--lp) * 11); }

@@ -1,0 +1,523 @@
+<title>fx-991EX Parity Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column of test rows, each split into steps | emulator LCD | verdict; a sticky bar carries progress and filters. */
+:root {
+  --bg: #f1f1ec;
+  --surface: #ffffff;
+  --ink: #1c1e19;
+  --muted: #5c6057;
+  --line: #d9dacf;
+  --lcd: #a7ab90;
+  --accent: #2d6fd8;
+  --same: #2c7a4b;
+  --same-bg: #e3f1e8;
+  --differs: #bf3d12;
+  --differs-bg: #fbe8df;
+  --shift: #9a7612;
+  --alpha: #c92e57;
+  --basen: #1f7fbf;
+  --key-fn: #232427;
+  --key-fn-ink: #f6f6f4;
+  --key-num: #f6f6f2;
+  --key-num-ink: #26272a;
+  --key-edge: #b9bab4;
+  --font-ui: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --font-key: "Barlow Semi Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --surface: #1e2024; --ink: #e9eae4; --muted: #a2a59b; --line: #33363b; --lcd: #a7ab90;
+    --accent: #6a9cf0; --same: #5cc28a; --same-bg: #1d3427; --differs: #f2915f; --differs-bg: #3b2219;
+    --shift: #e7c24b; --alpha: #f2708f; --basen: #5fb6f0; --key-fn: #0e0f11; --key-fn-ink: #f2f2ef;
+    --key-num: #e9e9e4; --key-num-ink: #1f2023; --key-edge: #4a4c51; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --surface: #1e2024; --ink: #e9eae4; --muted: #a2a59b; --line: #33363b; --lcd: #a7ab90;
+  --accent: #6a9cf0; --same: #5cc28a; --same-bg: #1d3427; --differs: #f2915f; --differs-bg: #3b2219;
+  --shift: #e7c24b; --alpha: #f2708f; --basen: #5fb6f0; --key-fn: #0e0f11; --key-fn-ink: #f2f2ef;
+  --key-num: #e9e9e4; --key-num-ink: #1f2023; --key-edge: #4a4c51; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-ui); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
+
+header.intro { display: grid; gap: 10px; padding-bottom: 18px; }
+header.intro h1 { margin: 0; font: 700 1.9rem/1.15 var(--font-key); letter-spacing: .01em; text-wrap: balance; }
+header.intro p { margin: 0; color: var(--muted); max-width: 70ch; }
+.how { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: .92rem; }
+.how li { display: flex; gap: 6px; align-items: baseline; }
+.how b { color: var(--ink); font-weight: 600; }
+.save-state { font-size: .85rem; color: var(--muted); }
+.save-state.warn { color: var(--differs); }
+
+/* sticky progress and filters */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+  margin: 0 -16px 18px; padding: 10px 16px;
+  display: grid; gap: 8px;
+}
+.stats { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-variant-numeric: tabular-nums; }
+.stat { font-size: .9rem; color: var(--muted); }
+.stat b { color: var(--ink); font-weight: 600; }
+.stat.s b { color: var(--same); }
+.stat.d b { color: var(--differs); }
+.meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; display: flex; }
+.meter i { display: block; height: 100%; }
+.meter .ms { background: var(--same); }
+.meter .md { background: var(--differs); }
+.controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  font: 600 .85rem var(--font-key); letter-spacing: .02em; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip:focus-visible, button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.spacer { flex: 1; }
+.jump { display: flex; flex-wrap: wrap; gap: 4px; }
+.jump a { font: 600 .8rem var(--font-mono); color: var(--muted); text-decoration: none; padding: 2px 6px; border-radius: 4px; }
+.jump a:hover { background: var(--surface); color: var(--ink); }
+.jump a.done { color: var(--same); }
+.jump a.has-diff { color: var(--differs); }
+
+/* sections */
+section.sec { margin-top: 30px; }
+.sec-head { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; padding-bottom: 10px; border-bottom: 2px solid var(--ink); }
+.sec-letter { grid-row: span 2; width: 38px; height: 38px; border-radius: 8px; background: var(--key-fn); color: var(--key-fn-ink); display: grid; place-items: center; font: 700 1.25rem var(--font-key); }
+.sec-head h2 { margin: 0; font: 700 1.3rem/1.2 var(--font-key); text-wrap: balance; }
+.sec-start { font-size: .9rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.sec-start .label { font-weight: 600; color: var(--ink); }
+
+/* test rows */
+.test {
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, .9fr); gap: 16px;
+  padding: 14px 0; border-bottom: 1px solid var(--line);
+}
+.test[hidden] { display: none !important; }
+.t-main { min-width: 0; display: grid; gap: 6px; align-content: start; }
+.t-title { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.t-id { font: 500 .82rem var(--font-mono); color: var(--muted); }
+.t-name { font-weight: 600; }
+.core-tag { font: 600 .68rem var(--font-key); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; }
+.manual { font-size: .88rem; color: var(--muted); }
+.manual b { color: var(--ink); font-weight: 600; }
+.note-text { font-size: .85rem; color: var(--muted); font-style: italic; }
+
+.keys { display: flex; flex-wrap: wrap; gap: 5px 4px; align-items: flex-end; }
+.k { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; }
+.k .fn { font: 600 .66rem/1 var(--font-key); white-space: nowrap; min-height: .7rem; }
+.k .fn.s { color: var(--shift); }
+.k .fn.a { color: var(--alpha); }
+.k .fn.b { color: var(--basen); }
+.cap {
+  font: 600 .82rem/1 var(--font-key); padding: 5px 7px 6px; border-radius: 5px 5px 7px 7px; min-width: 24px; text-align: center;
+  background: var(--key-fn); color: var(--key-fn-ink); box-shadow: 0 2px 0 var(--key-edge); white-space: nowrap;
+}
+.cap.num { background: var(--key-num); color: var(--key-num-ink); border: 1px solid var(--key-edge); box-shadow: 0 2px 0 var(--key-edge); font-size: .9rem; }
+.cap.blue { background: #2d6fd8; color: #fff; box-shadow: 0 2px 0 #1b4a99; }
+.cap.round { border-radius: 999px; background: linear-gradient(180deg, #e9e9ea, #a9aaad); color: #1c1d20; box-shadow: 0 2px 0 var(--key-edge); }
+.cap.round.s { color: #7a5d06; }
+.cap.round.a { color: #b0244a; }
+.cap.pad { background: linear-gradient(180deg, #f0f0f1, #b2b3b6); color: #1c1d20; }
+.cap.sep { visibility: hidden; min-width: 2px; padding: 0; }
+
+.t-lcd { min-width: 0; display: grid; gap: 6px; align-content: start; }
+.lcd-frame { background: #202124; border-radius: 8px 8px 12px 12px; padding: 7px 8px 9px; width: 100%; max-width: 376px; }
+.lcd-frame img { display: block; width: 100%; height: auto; aspect-ratio: 360 / 121; border-radius: 2px; background: var(--lcd); }
+.screen-text { font: .8rem/1.4 var(--font-mono); color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.t-verdict { min-width: 0; display: grid; gap: 8px; align-content: start; }
+.toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.toggle button {
+  font: 600 .95rem var(--font-key); letter-spacing: .02em; padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.toggle button.same[aria-pressed="true"] { background: var(--same); border-color: var(--same); color: #fff; }
+.toggle button.differs[aria-pressed="true"] { background: var(--differs); border-color: var(--differs); color: #fff; }
+.test.is-same .t-verdict { --tint: var(--same-bg); }
+.test.is-differs { background: linear-gradient(90deg, transparent, var(--differs-bg) 70%); }
+.verdict-note { width: 100%; min-height: 64px; resize: vertical; font: .88rem/1.4 var(--font-ui); color: var(--ink); background: var(--surface); border: 1.5px solid var(--differs); border-radius: 8px; padding: 6px 8px; }
+.verdict-note[hidden] { display: none; }
+.saved { font-size: .78rem; color: var(--muted); min-height: 1.1em; }
+
+.empty { padding: 30px 0; color: var(--muted); text-align: center; }
+.copy-out { width: 100%; min-height: 120px; font: .8rem var(--font-mono); }
+
+@media (max-width: 860px) {
+  .test { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .t-main { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .test { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .toggle button { transition: background-color .12s, color .12s, border-color .12s; }
+}
+</style>
+
+<div class="wrap">
+  <header class="intro">
+    <h1>fx-991EX Parity Sheet</h1>
+    <p>Run each test on your physical fx-991EX and compare its screen with what the emulator shows. Mark it <b>Same</b> or <b>Differs</b>; for a difference, write what your calculator shows so it can be fixed.</p>
+    <ul class="how">
+      <li><b>1</b> Before each section: <b>SHIFT 9 3 = AC</b> (RESET → Initialize All), then the section's start keys.</li>
+      <li><b>2</b> Press the keys of a test in order, then compare the whole screen.</li>
+      <li><b>3</b> Small yellow or red text above a key is the function it gives after SHIFT or ALPHA.</li>
+    </ul>
+    <div class="save-state" id="save-state">Connecting to saved results…</div>
+  </header>
+
+  <div class="bar" role="region" aria-label="Progress and filters">
+    <div class="stats" id="stats"></div>
+    <div class="meter" aria-hidden="true"><i class="ms" id="meter-same"></i><i class="md" id="meter-diff"></i></div>
+    <div class="controls">
+      <button class="chip" data-filter="all" aria-pressed="true" id="f-all">All</button>
+      <button class="chip" data-filter="core" aria-pressed="false" id="f-core">Core pass</button>
+      <button class="chip" data-filter="open" aria-pressed="false" id="f-open">Not checked</button>
+      <button class="chip" data-filter="differs" aria-pressed="false" id="f-differs">Differs</button>
+      <span class="spacer"></span>
+      <button class="chip" id="copy-diffs">Copy differences</button>
+    </div>
+    <nav class="jump" id="jump" aria-label="Sections"></nav>
+  </div>
+
+  <textarea class="copy-out" id="copy-out" hidden readonly aria-label="Differences as text"></textarea>
+  <main id="sheet"></main>
+  <p class="empty" id="empty" hidden>No tests match this filter.</p>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+// ---------------------------------------------------------------- keypad labels
+const KEYS = {
+  SHIFT: { f: 'SHIFT', cls: 'round s' }, ALPHA: { f: 'ALPHA', cls: 'round a' },
+  UP: { f: '▲', cls: 'pad' }, DOWN: { f: '▼', cls: 'pad' }, LEFT: { f: '◀', cls: 'pad' }, RIGHT: { f: '▶', cls: 'pad' },
+  MENU: { f: 'MENU', s: 'SETUP', cls: 'round' }, ON: { f: 'ON', cls: 'round' },
+  OPTN: { f: 'OPTN', s: 'QR' }, CALC: { f: 'CALC', s: 'SOLVE', a: '=' }, INT: { f: '∫▫', s: 'd/dx', a: ':' }, X: { f: '𝑥', s: 'Σ' },
+  FRAC: { f: '▭⁄▭', s: 'mixed ▭⁄▭' }, SQRT: { f: '√▫', s: '∛▫' }, SQR: { f: 'x²', s: 'x³', b: 'DEC' }, POW: { f: 'x▪', s: '▪√▫', b: 'HEX' },
+  LOG: { f: 'log▪▫', s: '10▪', b: 'BIN' }, LN: { f: 'ln', s: 'e▪', b: 'OCT' },
+  NEG: { f: '(−)', s: 'log', a: 'A', h: 'A' }, DMS: { f: '°’”', s: 'FACT', a: 'B', h: 'B' }, INV: { f: 'x⁻¹', s: 'x!', a: 'C', h: 'C' },
+  SIN: { f: 'sin', s: 'sin⁻¹', a: 'D', h: 'D' }, COS: { f: 'cos', s: 'cos⁻¹', a: 'E', h: 'E' }, TAN: { f: 'tan', s: 'tan⁻¹', a: 'F', h: 'F' },
+  STO: { f: 'STO', s: 'RECALL' }, ENG: { f: 'ENG', s: '←', c: 'i', cs: '∠' }, LP: { f: '(', s: 'Abs' }, RP: { f: ')', s: ',', a: 'x' },
+  SD: { f: 'S⇔D', s: 'ab/c⇔d/c', a: 'y' }, MPLUS: { f: 'M+', s: 'M−', a: 'M' },
+  DEL: { f: 'DEL', s: 'INS', a: 'UNDO', cls: 'blue' }, AC: { f: 'AC', s: 'OFF', cls: 'blue' },
+  MUL: { f: '×', s: 'nPr', cls: 'num' }, DIV: { f: '÷', s: 'nCr', cls: 'num' }, ADD: { f: '+', s: 'Pol', cls: 'num' }, SUB: { f: '−', s: 'Rec', cls: 'num' },
+  DOT: { f: '.', s: 'Ran#', a: 'RanInt', cls: 'num' }, EXP: { f: '×10ˣ', s: 'π', a: 'e', cls: 'num' }, ANS: { f: 'Ans', s: '%', cls: 'num' }, EQ: { f: '=', s: '≈', cls: 'num' },
+  0: { f: '0', s: 'Rnd', cls: 'num' }, 7: { f: '7', s: 'CONST', cls: 'num' }, 8: { f: '8', s: 'CONV', cls: 'num' }, 9: { f: '9', s: 'RESET', cls: 'num' },
+};
+for (const d of '123456') KEYS[d] = { f: d, cls: 'num' };
+
+/** Keycaps for a key sequence; SHIFT/ALPHA annotate the next key. Base-N and Complex label their own keys. */
+function keycaps(seq, section) {
+  const frag = document.createDocumentFragment();
+  let mod = null;
+  for (const id of seq.split(/\s+/).filter(Boolean)) {
+    const k = KEYS[id] || { f: id };
+    const wrap = document.createElement('span');
+    wrap.className = 'k';
+    const fn = document.createElement('span');
+    fn.className = 'fn';
+    if (mod === 'SHIFT') { fn.textContent = section === 'I' && k.cs ? k.cs : k.s || ''; fn.classList.add('s'); }
+    else if (mod === 'ALPHA') { fn.textContent = k.a || ''; fn.classList.add('a'); }
+    else if (section === 'J' && (k.b || k.h)) { fn.textContent = k.b || k.h; fn.classList.add('b'); }
+    else if (section === 'I' && k.c) { fn.textContent = k.c; fn.classList.add('b'); }
+    const cap = document.createElement('span');
+    cap.className = `cap ${k.cls || ''}`;
+    cap.textContent = k.f;
+    wrap.append(fn, cap);
+    frag.append(wrap);
+    mod = id === 'SHIFT' || id === 'ALPHA' ? id : null;
+  }
+  return frag;
+}
+
+// ---------------------------------------------------------------- results store (db, or this browser as a fallback)
+const results = new Map(); // id → { status: 'same'|'differs', note }
+const LOCAL_KEY = 'fx991-parity-results';
+let store = null;
+
+function localStore() {
+  const read = () => { try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || '{}'); } catch { return {}; } };
+  return {
+    kind: 'local',
+    load() { for (const [id, r] of Object.entries(read())) results.set(id, r); },
+    async save(id, r) {
+      const all = read();
+      if (r) all[id] = r; else delete all[id];
+      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(all)); } catch { /* storage blocked: kept for this visit only */ }
+    },
+  };
+}
+
+function dbStore(db) {
+  const col = db.collection('results');
+  const pending = new Map(); // one write at a time per document
+  return {
+    kind: 'db',
+    subscribe(onChange) {
+      col.onSnapshot((snap) => {
+        for (const ch of snap.docChanges()) {
+          if (ch.type === 'removed') results.delete(ch.doc.id);
+          else results.set(ch.doc.id, ch.doc.data());
+          onChange(ch.doc.id);
+        }
+        setSaveState('Results are saved to this sheet and can be read back for fixing.', false);
+      }, () => setSaveState('Lost the connection to saved results. Changes may not be kept; reload the page.', true));
+    },
+    save(id, r) {
+      const prev = pending.get(id) || Promise.resolve();
+      const next = prev.catch(() => {}).then(() => (r ? col.doc(id).set(r) : col.doc(id).delete()));
+      pending.set(id, next);
+      return next;
+    },
+  };
+}
+
+function setSaveState(text, warn) {
+  const el = document.getElementById('save-state');
+  el.textContent = text;
+  el.classList.toggle('warn', warn);
+}
+
+// ---------------------------------------------------------------- page
+const rows = new Map(); // id → { el, test, section }
+let filter = 'all';
+
+function build() {
+  const sheet = document.getElementById('sheet');
+  const jump = document.getElementById('jump');
+  for (const sec of DATA.sections) {
+    const a = document.createElement('a');
+    a.href = `#sec-${sec.id}`;
+    a.textContent = sec.id;
+    a.title = sec.title;
+    a.id = `jump-${sec.id}`;
+    jump.append(a);
+
+    const s = document.createElement('section');
+    s.className = 'sec';
+    s.id = `sec-${sec.id}`;
+    const head = document.createElement('div');
+    head.className = 'sec-head';
+    head.innerHTML = '<div class="sec-letter"></div><h2></h2><div class="sec-start"><span class="label">Start:</span> Initialize All</div>';
+    head.querySelector('.sec-letter').textContent = sec.id;
+    head.querySelector('h2').textContent = sec.title;
+    const start = head.querySelector('.sec-start');
+    if (sec.start.keys) { start.append(', then', ' '); start.append(keycaps(sec.start.keys, sec.id)); }
+    const desc = document.createElement('span');
+    desc.textContent = `(${sec.start.text})`;
+    start.append(' ', desc);
+    s.append(head);
+
+    for (const t of sec.tests) {
+      const row = document.createElement('article');
+      row.className = 'test';
+      row.id = t.id;
+      row.innerHTML = `
+        <div class="t-main">
+          <div class="t-title"><span class="t-id"></span><span class="t-name"></span></div>
+          <div class="keys"></div>
+        </div>
+        <div class="t-lcd">
+          <div class="lcd-frame"><img loading="lazy" decoding="async" width="360" height="121" alt=""></div>
+          <div class="screen-text"></div>
+        </div>
+        <div class="t-verdict">
+          <div class="toggle" role="group">
+            <button class="same" aria-pressed="false">Same</button>
+            <button class="differs" aria-pressed="false">Differs</button>
+          </div>
+          <textarea class="verdict-note" hidden placeholder="What does your calculator show?"></textarea>
+          <div class="saved" aria-live="polite"></div>
+        </div>`;
+      row.querySelector('.t-id').textContent = t.id;
+      row.querySelector('.t-name').textContent = t.title;
+      if (t.core) {
+        const tag = document.createElement('span');
+        tag.className = 'core-tag';
+        tag.textContent = 'Core';
+        row.querySelector('.t-title').append(tag);
+      }
+      row.querySelector('.keys').append(keycaps(t.keys, sec.id));
+      const main = row.querySelector('.t-main');
+      if (t.manual) {
+        const m = document.createElement('div');
+        m.className = 'manual';
+        m.innerHTML = 'User’s Guide: <b></b>';
+        m.querySelector('b').textContent = t.manual;
+        main.append(m);
+      }
+      if (t.note) {
+        const n = document.createElement('div');
+        n.className = 'note-text';
+        n.textContent = t.note;
+        main.append(n);
+      }
+      const img = row.querySelector('img');
+      img.src = t.image;
+      img.alt = `Emulator screen: ${t.screen.replace(/\n/g, ' / ')}`;
+      row.querySelector('.screen-text').textContent = t.screen;
+      const note = row.querySelector('.verdict-note');
+      note.id = `note-${t.id}`;
+      note.setAttribute('aria-label', `What your calculator shows for ${t.id}`);
+      row.querySelector('.toggle').setAttribute('aria-label', `Verdict for ${t.id}`);
+      row.querySelector('.same').addEventListener('click', () => setVerdict(t.id, 'same'));
+      row.querySelector('.differs').addEventListener('click', () => setVerdict(t.id, 'differs'));
+      let timer;
+      note.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => saveRow(t.id, { status: 'differs', note: note.value }), 700);
+      });
+      s.append(row);
+      rows.set(t.id, { el: row, test: t, section: sec.id });
+    }
+    sheet.append(s);
+  }
+}
+
+function setVerdict(id, status) {
+  const cur = results.get(id);
+  const row = rows.get(id).el;
+  if (cur && cur.status === status) {
+    saveRow(id, null);
+    return;
+  }
+  const note = status === 'differs' ? row.querySelector('.verdict-note').value : '';
+  saveRow(id, { status, note });
+  if (status === 'differs') setTimeout(() => row.querySelector('.verdict-note').focus(), 0);
+}
+
+async function saveRow(id, r) {
+  if (r) results.set(id, r); else results.delete(id);
+  paint(id);
+  updateSummary();
+  const saved = rows.get(id).el.querySelector('.saved');
+  try {
+    await store.save(id, r);
+    saved.textContent = store.kind === 'db' ? 'Saved' : 'Saved in this browser';
+  } catch (e) {
+    saved.textContent = e && e.code === 'invalid_argument' ? 'You can view this sheet but not change it.' : 'Not saved. Check your connection and try again.';
+  }
+}
+
+function paint(id) {
+  const row = rows.get(id);
+  if (!row) return;
+  const r = results.get(id);
+  const el = row.el;
+  el.classList.toggle('is-same', r?.status === 'same');
+  el.classList.toggle('is-differs', r?.status === 'differs');
+  el.querySelector('.same').setAttribute('aria-pressed', String(r?.status === 'same'));
+  el.querySelector('.differs').setAttribute('aria-pressed', String(r?.status === 'differs'));
+  const note = el.querySelector('.verdict-note');
+  note.hidden = r?.status !== 'differs';
+  if (r?.status === 'differs' && document.activeElement !== note) note.value = r.note || '';
+  applyFilter(id);
+}
+
+function applyFilter(id) {
+  const row = rows.get(id);
+  const r = results.get(id);
+  const show = filter === 'all'
+    || (filter === 'core' && row.test.core)
+    || (filter === 'open' && !r)
+    || (filter === 'differs' && r?.status === 'differs');
+  row.el.hidden = !show;
+}
+
+function applyFilters() {
+  for (const id of rows.keys()) applyFilter(id);
+  for (const sec of document.querySelectorAll('section.sec')) {
+    sec.hidden = ![...sec.querySelectorAll('.test')].some((t) => !t.hidden);
+  }
+  document.getElementById('empty').hidden = [...rows.values()].some((r) => !r.el.hidden);
+}
+
+function updateSummary() {
+  const total = rows.size;
+  let same = 0, diff = 0;
+  for (const r of results.values()) { if (r.status === 'same') same++; else if (r.status === 'differs') diff++; }
+  const core = [...rows.values()].filter((r) => r.test.core);
+  const coreDone = core.filter((r) => results.has(r.test.id)).length;
+  document.getElementById('stats').innerHTML = '';
+  const add = (cls, label, value) => {
+    const s = document.createElement('span');
+    s.className = `stat ${cls}`;
+    s.innerHTML = '<b></b> ';
+    s.querySelector('b').textContent = value;
+    s.append(label);
+    document.getElementById('stats').append(s);
+  };
+  add('', `of ${total} checked`, same + diff);
+  add('s', 'same', same);
+  add('d', 'differ', diff);
+  add('', `of ${core.length} core tests done`, coreDone);
+  document.getElementById('meter-same').style.width = `${(same / total) * 100}%`;
+  document.getElementById('meter-diff').style.width = `${(diff / total) * 100}%`;
+  for (const sec of DATA.sections) {
+    const a = document.getElementById(`jump-${sec.id}`);
+    const ids = sec.tests.map((t) => t.id);
+    a.classList.toggle('done', ids.every((id) => results.has(id)));
+    a.classList.toggle('has-diff', ids.some((id) => results.get(id)?.status === 'differs'));
+  }
+  applyFilters();
+}
+
+function differencesText() {
+  const lines = [];
+  for (const { test } of rows.values()) {
+    const r = results.get(test.id);
+    if (r?.status !== 'differs') continue;
+    lines.push(`${test.id} ${test.title}\n  keys: ${test.keys}\n  emulator: ${test.screen.replace(/\n/g, ' / ')}\n  calculator: ${r.note || '(no note)'}`);
+  }
+  return lines.length ? lines.join('\n\n') : 'No differences marked yet.';
+}
+
+document.querySelectorAll('[data-filter]').forEach((b) => b.addEventListener('click', () => {
+  filter = b.dataset.filter;
+  document.querySelectorAll('[data-filter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  applyFilters();
+}));
+
+document.getElementById('copy-diffs').addEventListener('click', async (e) => {
+  const text = differencesText();
+  const out = document.getElementById('copy-out');
+  try {
+    await navigator.clipboard.writeText(text);
+    e.target.textContent = 'Copied';
+    setTimeout(() => { e.target.textContent = 'Copy differences'; }, 1500);
+    out.hidden = true;
+  } catch {
+    out.value = text;
+    out.hidden = false;
+    out.select();
+  }
+});
+
+// ---------------------------------------------------------------- start
+build();
+updateSummary();
+
+(async () => {
+  let db = null;
+  try { db = window.claude ? await window.claude.use('db') : null; } catch { db = null; }
+  if (db) {
+    store = dbStore(db);
+    store.subscribe((id) => { paint(id); updateSummary(); });
+  } else {
+    store = localStore();
+    store.load();
+    for (const id of rows.keys()) paint(id);
+    updateSummary();
+    setSaveState('Results are saved in this browser only.', false);
+  }
+})();
+</script>
