@@ -388,8 +388,8 @@ export const SECTIONS = [
       t('x ▸t (p.23 Ex 5)', `${FREQ_DATA} AC 2 OPTN DOWN 4 4 EQ`, { manual: '−0.8660254038', core: true }),
       t('P(Ans) (p.23 Ex 5)', `${FREQ_DATA} AC 2 OPTN DOWN 4 4 EQ OPTN DOWN 4 1 ANS RP EQ`, { manual: '0.19324', core: true }),
       t('1-Variable Calc list (p.21)', `${FREQ_DATA} OPTN 3`, { core: true }),
-      t('… scrolled 4 lines', `${FREQ_DATA} OPTN 3 DOWN DOWN DOWN DOWN`),
-      t('… scrolled to the end', `${FREQ_DATA} OPTN 3 DOWN DOWN DOWN DOWN DOWN DOWN DOWN DOWN DOWN`),
+      t('… ▼ once: second page', `${FREQ_DATA} OPTN 3 DOWN`), // ▲▼ turn a whole page of six rows
+      t('… ▼ twice: last page', `${FREQ_DATA} OPTN 3 DOWN DOWN`),
       t('Q1 with an odd count (1…7)', `${statFreq(0)} MENU 6 1 1 EQ 2 EQ 3 EQ 4 EQ 5 EQ 6 EQ 7 EQ AC OPTN DOWN 3 2 EQ`, { core: true, note: 'Distinguishes the quartile method: 2 or 2.5' }),
       t('Q3 with an odd count (1…7)', `${statFreq(0)} MENU 6 1 1 EQ 2 EQ 3 EQ 4 EQ 5 EQ 6 EQ 7 EQ AC OPTN DOWN 3 4 EQ`, { core: true }),
       t('Median with an even count (1…6)', `${statFreq(0)} MENU 6 1 1 EQ 2 EQ 3 EQ 4 EQ 5 EQ 6 EQ AC OPTN DOWN 3 3 EQ`),

@@ -5,7 +5,7 @@ edition of the fx-991EX), for teaching: students and teacher press the same keys
 answers. Like the physical calculator it shows Hungarian menus and messages, a decimal comma, `;` as the argument
 separator, `tg` for tangent, CODATA 2014 constants and the ATOMIC (periodic table / atomic weight) menu.
 SETUP ▸ Language offers the same list as the calculator (Cesky, Magyar, Polski, Slovensky); only Magyar is
-translated so far, the other three show English text.
+translated (the other three show English text).
 Hungarian strings marked `//?` in `src/calc/i18n.js` are not yet confirmed against the device.
 
 Not affiliated with or endorsed by CASIO. CASIO and ClassWiz are trademarks of CASIO Computer Co., Ltd.
