@@ -4,6 +4,14 @@ import { MENU_KEY } from '../keymap.js';
 import { MENU_KEYS } from '../../core/constants.js';
 import { t } from '../i18n.js';
 
+/** Scrollbar of a paged screen: the track is split into one equal segment per page. */
+export function pageBar(page, pages) {
+  const bar = h('div', 'scrollbar');
+  bar.style.top = `${(100 / pages) * page}%`;
+  bar.style.height = `${100 / pages}%`;
+  return bar;
+}
+
 /**
  * A paged menu. pages: [{ items: [{ label, run(calc) }], cols = 1, small = false }]
  * Items are numbered per page (1–9, A–F, M, x). ▲/▼ change page, ◀ returns to the parent menu.
@@ -66,13 +74,7 @@ export class Menu {
       g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
       el.append(g);
     } else el.append(...items);
-    if (this.pages.length > 1) {
-      const bar = h('div', 'scrollbar');
-      const span = 100 / this.pages.length;
-      bar.style.top = `${span * this.page}%`;
-      bar.style.height = `${span}%`;
-      el.append(bar);
-    }
+    if (this.pages.length > 1) el.append(pageBar(this.page, this.pages.length));
     return { el, status: { sub: this.sub } };
   }
 }

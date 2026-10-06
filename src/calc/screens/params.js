@@ -5,7 +5,7 @@ import { evaluate } from '../../core/evaluator.js';
 import { CalcError } from '../../core/errors.js';
 import * as V from '../../core/values.js';
 import { h, renderNodes, renderModel } from '../../ui/render.js';
-import { ErrorScreen } from './common.js';
+import { ErrorScreen, pageBar } from './common.js';
 import { LINE_TEMPLATE } from './calcscreen.js';
 import { t } from '../i18n.js';
 
@@ -145,7 +145,8 @@ export class ListScreen {
       const val = v == null ? 'ERROR' : typeof v === 'string' ? v : renderModel(this.calc.model(v, { form: 'dec' }), { line: true });
       el.append(h('div', 'row list-row', h('span', 'lbl', r.label), h('span', 'v', '=', val)));
     }
-    if (this.rows.length > vis) {
+    if (this.dense && this.rows.length > vis) el.append(pageBar(this.top / vis, Math.ceil(this.rows.length / vis)));
+    else if (this.rows.length > vis) {
       const bar = h('div', 'scrollbar');
       bar.style.top = `${(this.top / this.rows.length) * 100}%`;
       bar.style.height = `${(vis / this.rows.length) * 100}%`;
