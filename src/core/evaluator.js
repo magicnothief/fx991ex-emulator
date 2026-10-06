@@ -13,6 +13,7 @@ import { tokenInfo } from './tokens.js';
 import { CONSTANTS, CONVERSIONS } from './constants.js';
 import { integrate, derivative } from './numerics.js';
 import * as Dist from './dist.js';
+import { ELEMENTS } from './elements.js';
 
 const E_VALUE = N.fromDec(new N.D('2.71828182845904'));
 const ratExpr = (s) => s.split('/').map(Q.parseDecimal).reduce(Q.div);
@@ -242,12 +243,20 @@ function call(node, ctx, sub) {
     }
     case 'Pol': case 'Rec': {
       if (!ctx.top || ctx.calculus) fail(ERR.SYNTAX);
-      const [p, q] = fn === 'Pol' ? Object.values(N.pol(r(0), r(1), unit)) : Object.values(N.rec(r(0), r(1), unit));
+      // Pol/Rec results are decimal-type (Radian Pol(1;1): r=1,414213562; θ=0,7853981634)
+      const [p, q] = (fn === 'Pol' ? Object.values(N.pol(r(0), r(1), unit)) : Object.values(N.rec(r(0), r(1), unit)))
+        .map((v) => N.fromDec(v.d));
       ctx.setVar?.('x', p);
       ctx.setVar?.('y', q);
       return { pair: true, labels: fn === 'Pol' ? ['r', 'θ'] : ['x', 'y'], values: [p, q] };
     }
     case 'Rnd': return N.rnd(r(0), ctx.numFormat);
+    case 'AtWt': {
+      if (ctx.baseMode) fail(ERR.SYNTAX);
+      const z = r(0);
+      if (!N.isInt(z) || z.d.lt(1) || z.d.gt(ELEMENTS.length)) fail(ERR.ARGUMENT);
+      return N.fromDec(new N.D(ELEMENTS[N.toNumber(z) - 1].weight));
+    }
     case 'RanInt#': return N.ranInt(r(0), r(1));
     case '∫': return calculus(node, ctx, 'int');
     case 'd/dx': return calculus(node, ctx, 'diff');
@@ -289,7 +298,8 @@ function calculus(node, ctx, kind) {
   const num = (a) => V.real(ev(a, inner));
   if (kind === 'sum') {
     const a = num(rest[0]), b = num(rest[1]);
-    if (!N.isInt(a) || !N.isInt(b) || a.d.gt(b.d) || a.d.abs().gte(1e10) || b.d.abs().gte(1e10)) fail(ERR.MATH);
+    if (!N.isInt(a) || !N.isInt(b)) fail(ERR.ARGUMENT); // Σ limits must be integers (Argumentum HIBA)
+    if (a.d.gt(b.d) || a.d.abs().gte(1e10) || b.d.abs().gte(1e10)) fail(ERR.MATH);
     const lo = N.toBigInt(a), hi = N.toBigInt(b);
     if (hi - lo > 1000000n) fail(ERR.TIME_OUT);
     let s = N.ZERO;
@@ -307,7 +317,7 @@ function calculus(node, ctx, kind) {
     const tol = rest[2] ? num(rest[2]).d.toNumber() : 1e-5;
     if (!(tol > 0)) fail(ERR.MATH);
     const v = guard(() => integrate(f, a, b, tol));
-    return N.fromDec(new N.D(v).toSD(15));
+    return N.recognize(N.fromDec(new N.D(v).toSD(15)));
   }
   const x0 = num(rest[0]).d.toNumber();
   const tol = rest[1] ? num(rest[1]).d.toNumber() : 1e-10;

@@ -31,15 +31,15 @@ export const KEYMAP = {
   9: { n: 'tok:9', s: 'reset' },
   DEL: { n: 'del', s: 'ins', a: 'undo' },
   AC: { n: 'ac', s: 'off' },
-  4: { n: 'tok:4' }, 5: { n: 'tok:5' }, 6: { n: 'tok:6' },
+  4: { n: 'tok:4', s: 'atomic' }, 5: { n: 'tok:5' }, 6: { n: 'tok:6' },
   1: { n: 'tok:1' }, 2: { n: 'tok:2' }, 3: { n: 'tok:3' },
   0: { n: 'tok:0', s: 'tok:Rnd(' },
   MUL: { n: 'tok:×', s: 'tok:P' },
   DIV: { n: 'tok:÷', s: 'tok:C' },
   ADD: { n: 'tok:+', s: 'tok:Pol(' },
   SUB: { n: 'tok:-', s: 'tok:Rec(' },
-  DOT: { n: 'tok:.', s: 'tok:Ran#', a: 'tok:RanInt#(' },
-  EXP: { n: 'exp', s: 'tok:π', a: 'tok:e' },
+  DOT: { n: 'tok:.', s: 'tok:Ran#', a: 'tok:RanInt#(', b: 'noop' }, // Base-N takes no decimals
+  EXP: { n: 'exp', s: 'tok:π', a: 'tok:e', b: 'noop' }, // nor exponents
   ANS: { n: 'tok:Ans', s: 'tok:%' },
   EQ: { n: 'eq', s: 'approx' },
 };

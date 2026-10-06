@@ -13,6 +13,8 @@ import { ERR, fail } from './errors.js';
 export const D = Decimal.clone({ precision: 15, rounding: Decimal.ROUND_HALF_UP, toExpNeg: -200, toExpPos: 200 });
 export const H = Decimal.clone({ precision: 40, rounding: Decimal.ROUND_HALF_EVEN, toExpNeg: -200, toExpPos: 200 });
 export const PI_H = H.acos(-1);
+// π as the calculator stores it (15 digits); radian arguments are measured against this value
+const PI_15 = new H(PI_H.toSD(15).toString());
 const LIMIT = new D('1e100');
 const TINY = new D('1e-99');
 
@@ -284,33 +286,12 @@ function rootRatExact(q, k) {
   return Q.rat(neg ? -rn : rn, rd);
 }
 
-function powRatExact(a, e) {
-  const q = ratOf(a);
-  if (!q) return null;
-  const k = Number(e.d);
-  if (k > 64) return null;
-  const root = rootRatExact(q, k);
-  if (root) return powIntExact(fromRat(root, a.f), Number(e.n));
-  if (k === 2 && q.n > 0n) {
-    // q^(p/2) = q^((p-1)/2) · √q
-    const p = Number(e.n);
-    const base = powIntExact(a, (p - 1) / 2);
-    const s = sqrtRatTerms(q);
-    if (base && s) return mul(base, fromSurd(s));
-  }
-  return null;
-}
-
 export function pow(a, b) {
+  // Only integer exponents keep exact forms; others are decimal-type (10^0,5 = 3,16227766)
   const e = ratOf(b);
-  if (e && (a.x || isZero(a))) {
-    if (Q.isInt(e) && Q.abs(e).n <= 100000n) {
-      const r = powIntExact(a, Number(e.n));
-      if (r) return r;
-    } else if (!Q.isInt(e)) {
-      const r = powRatExact(a, e);
-      if (r) return r;
-    }
+  if (e && Q.isInt(e) && Q.abs(e).n <= 100000n && (a.x || isZero(a))) {
+    const r = powIntExact(a, Number(e.n));
+    if (r) return r;
   }
   return powDec(a, b);
 }
@@ -402,15 +383,14 @@ const q2 = (n, d) => Q.rat(BigInt(n), BigInt(d));
 const SIN_TABLE = {
   0: [],
   15: [[2n, q2(-1, 4)], [6n, q2(1, 4)]],
-  18: [[1n, q2(-1, 4)], [5n, q2(1, 4)]],
   30: [[1n, q2(1, 2)]],
   45: [[2n, q2(1, 2)]],
-  54: [[1n, q2(1, 4)], [5n, q2(1, 4)]],
   60: [[3n, q2(1, 2)]],
   75: [[2n, q2(1, 4)], [6n, q2(1, 4)]],
   90: [[1n, Q.ONE]],
 };
-const TABLE_ANGLES = [0, 15, 18, 30, 45, 54, 60, 75, 90];
+// Multiples of 15° only: sin 18° and cos 36° are shown as decimals on the calculator.
+const TABLE_ANGLES = [0, 15, 30, 45, 60, 75, 90];
 
 /** sin of an integer number of degrees in [0, 360) as exact terms, or null. */
 function sinTab(a) {
@@ -428,7 +408,10 @@ function exactDegrees(a, unit) {
   if (unit === RAD) {
     const c = piOf(a);
     if (c) return Q.mul(c, Q.rat(180n));
-    return isZero(a) ? Q.ZERO : null;
+    if (isZero(a)) return Q.ZERO;
+    // a whole number of quarter turns of the internal π is an exact axis angle
+    const quarters = new H(a.d.toString()).mul(2).div(PI_15);
+    return quarters.isInteger() ? Q.rat(BigInt(quarters.mul(90).toFixed(0))) : null;
   }
   const q = ratOrDec(a);
   return unit === DEG ? q : Q.mul(q, q2(9, 10));
@@ -446,7 +429,7 @@ function toRadiansH(a, unit) {
   const x = new H(a.d.toString());
   if (unit === DEG) return x.mod(360).mul(PI_H).div(180);
   if (unit === GRA) return x.mod(400).mul(PI_H).div(200);
-  return x.mod(PI_H.mul(2));
+  return x.mul(PI_H).div(PI_15).mod(PI_H.mul(2));
 }
 
 function checkTrigRange(a, unit) {
@@ -651,6 +634,40 @@ export function atan2(y, x, unit) {
 
 export function rec(r, theta, unit) {
   return { x: mul(r, cos(theta, unit)), y: mul(r, sin(theta, unit)) };
+}
+
+/**
+ * A numerically computed value shown in natural form when it is (to 11 digits) a fraction or a
+ * multiple of π that fits the display, as integration results are (∫₀¹x²dx = 1/3, ∫₀¹4/(1+x²)dx = π).
+ */
+export function recognize(v) {
+  if (isZero(v)) return ZERO;
+  const x = new H(v.d.toString());
+  const q = fractionNear(x);
+  if (q) return Q.isInt(q) ? fromRat(q, 'int') : fromRat(q, 'dec');
+  const c = x.abs().lt(1e6) ? fractionNear(x.div(PI_H)) : null;
+  if (c) return fromPi(c);
+  return v;
+}
+
+/** Continued-fraction convergent within 1e-11 (relative) of x that fits 10 display digits, or null. */
+function fractionNear(x) {
+  const sign = x.s < 0 ? -1n : 1n;
+  let v = x.abs();
+  let [h0, h1, k0, k1] = [0n, 1n, 1n, 0n];
+  const target = x.abs();
+  for (let i = 0; i < 40; i++) {
+    const a = BigInt(v.floor().toFixed(0));
+    [h0, h1] = [h1, a * h1 + h0];
+    [k0, k1] = [k1, a * k1 + k0];
+    if (Q.digits(h1) + Q.digits(k1) + 1 > 10) return null;
+    const err = new H(h1.toString()).div(k1.toString()).sub(target).abs();
+    if (err.lte(target.mul('1e-11').add('1e-14'))) return Q.rat(sign * h1, k1);
+    const frac = v.sub(v.floor());
+    if (frac.isZero()) return null;
+    v = new H(1).div(frac);
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------- engineering symbols

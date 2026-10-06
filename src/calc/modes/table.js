@@ -103,12 +103,14 @@ function compiled(calc) {
   return { f, g };
 }
 
-function rowFor(calc, fns, x) {
+/** One table row; table values are decimal-type (−0,5 rather than −1/2). */
+function rowFor(calc, fns, xValue) {
+  const x = N.fromDec(xValue.d);
   calc.mem.vars.x = x; // table generation changes variable x
   const val = (ast) => {
     if (!ast) return null;
     try {
-      return V.real(evaluate(ast, calc.ctx()));
+      return N.fromDec(V.real(evaluate(ast, calc.ctx())).d);
     } catch (e) {
       if (!(e instanceof CalcError)) throw e;
       return 'ERROR';

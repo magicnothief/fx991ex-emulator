@@ -2,6 +2,7 @@
 import { h } from '../../ui/render.js';
 import { MENU_KEY } from '../keymap.js';
 import { MENU_KEYS } from '../../core/constants.js';
+import { t } from '../i18n.js';
 
 /**
  * A paged menu. pages: [{ items: [{ label, run(calc) }], cols = 1, small = false }]
@@ -52,8 +53,8 @@ export class Menu {
     const page = this.pages[this.page];
     const cols = page.cols || 1;
     const el = h('div', `menu${page.small ? ' small' : ''}`);
-    if (this.title) el.append(h('div', 'item title', this.title));
-    const items = page.items.map((it, i) => h('div', 'item', `${MENU_KEYS[i]}:${it.label}`));
+    if (this.title) el.append(h('div', 'item title', t(this.title)));
+    const items = page.items.map((it, i) => h('div', 'item', `${MENU_KEYS[i]}:${t(it.label)}`));
     const rows = Math.ceil(page.items.length / cols) + (this.title ? 1 : 0);
     if (rows > 5) {
       // pages with many rows (CONV Length, Atomic&Nuclear) use a tighter line pitch
@@ -102,7 +103,7 @@ export class Message {
   }
 
   view() {
-    return { el: h('div', 'message', this.lines.map((l) => h('div', null, l))) };
+    return { el: h('div', 'message', this.lines.map((l) => h('div', null, t(l)))) };
   }
 }
 
@@ -123,8 +124,8 @@ export class ErrorScreen {
   }
 
   view() {
-    const goto = this.onGoto ? h('div', null, '[◀][▶]:Goto') : null;
-    return { el: h('div', 'message', h('div', 'big', this.kind), h('div', null, ' '), h('div', null, '[AC] :Cancel'), goto) };
+    const goto = this.onGoto ? h('div', null, t('[◀][▶]:Goto')) : null;
+    return { el: h('div', 'message', h('div', 'big', t(this.kind)), h('div', null, ' '), h('div', null, t('[AC] :Cancel')), goto) };
   }
 }
 
@@ -143,7 +144,7 @@ export class Confirm {
   }
 
   view() {
-    return { el: h('div', 'message', h('div', null, this.question), h('div', null, ' '), h('div', null, 'Yes   :[=]'), h('div', null, 'Cancel:[AC]')) };
+    return { el: h('div', 'message', h('div', null, t(this.question)), h('div', null, ' '), h('div', null, t('Yes   :[=]')), h('div', null, t('Cancel:[AC]'))) };
   }
 }
 
@@ -167,6 +168,6 @@ export class DigitPrompt {
   }
 
   view() {
-    return { el: h('div', 'menu', h('div', 'item', this.text)) };
+    return { el: h('div', 'menu', h('div', 'item', t(this.text))) };
   }
 }

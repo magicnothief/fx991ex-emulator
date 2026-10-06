@@ -26,13 +26,13 @@ const FN_ROWS = [
     ['INV', '<span class="it">x</span><sup>−1</sup>', { s: 'x!', ab: 'C' }],
     ['SIN', 'sin', { s: 'sin⁻¹', ab: 'D' }],
     ['COS', 'cos', { s: 'cos⁻¹', ab: 'E' }],
-    ['TAN', 'tan', { s: 'tan⁻¹', ab: 'F' }],
+    ['TAN', 'tg', { s: 'tg⁻¹', ab: 'F' }],
   ],
   [
     ['STO', 'STO', { s: 'RECALL' }],
     ['ENG', 'ENG', { cb: '∠', s: '←', c: 'i' }],
     ['LP', '(', { s: 'Abs' }],
-    ['RP', ')', { s: ',', a: 'x' }],
+    ['RP', ')', { s: ';', a: 'x' }],
     ['SD', 'S⇔D', { s: 'a<small>b</small>⁄<small>c</small>⇔<small>d</small>⁄<small>c</small>', a: 'y' }],
     ['MPLUS', 'M+', { s: 'M−', a: 'M' }],
   ],
@@ -40,9 +40,9 @@ const FN_ROWS = [
 
 const NUM_ROWS = [
   [['7', '7', { s: 'CONST' }], ['8', '8', { s: 'CONV' }], ['9', '9', { s: 'RESET' }], ['DEL', 'DEL', { s: 'INS', a: 'UNDO' }, 'blue'], ['AC', 'AC', { s: 'OFF' }, 'blue']],
-  [['4', '4', {}], ['5', '5', {}], ['6', '6', {}], ['MUL', '×', { s: 'nPr' }], ['DIV', '÷', { s: 'nCr' }]],
+  [['4', '4', { s: 'ATOMIC' }], ['5', '5', {}], ['6', '6', {}], ['MUL', '×', { s: 'nPr' }], ['DIV', '÷', { s: 'nCr' }]],
   [['1', '1', {}], ['2', '2', {}], ['3', '3', {}], ['ADD', '+', { s: 'Pol' }], ['SUB', '−', { s: 'Rec' }]],
-  [['0', '0', { s: 'Rnd' }], ['DOT', '•', { s: 'Ran#', a: 'RanInt' }], ['EXP', '×10<sup class="it">x</sup>', { s: 'π', a: 'e' }], ['ANS', 'Ans', { s: '%' }], ['EQ', '=', { s: '≈' }]],
+  [['0', '0', { s: 'Rnd' }], ['DOT', ',', { s: 'Ran#', a: 'RanInt' }], ['EXP', '×10<sup class="it">x</sup>', { s: 'π', a: 'e' }], ['ANS', 'Ans', { s: '%' }], ['EQ', '=', { s: '≈' }]],
 ];
 
 function labelsHtml(l) {
@@ -128,7 +128,7 @@ export function buildKeypad(root, onKey) {
 // PC keyboard shortcuts (F1 shows this list in the app).
 export const KEYBOARD = {
   '0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
-  '.': 'DOT', ',': 'DOT', '+': 'ADD', '-': 'SUB', '*': 'MUL', '/': 'DIV', '(': 'LP', ')': 'RP', '^': 'POW',
+  '.': 'DOT', ',': 'DOT', ';': 'RP', '+': 'ADD', '-': 'SUB', '*': 'MUL', '/': 'DIV', '(': 'LP', ')': 'RP', '^': 'POW',
   Enter: 'EQ', '=': 'EQ', Backspace: 'DEL', Delete: 'DEL', Escape: 'AC',
   ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT',
   F2: 'SHIFT', F3: 'ALPHA', F4: 'MENU', F5: 'OPTN', F6: 'CALC',

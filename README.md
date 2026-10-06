@@ -1,7 +1,11 @@
 # fx-991EX Emulator
 
-A Windows desktop emulator of the CASIO fx-991EX ClassWiz scientific calculator, for teaching:
-students and teacher press the same keys and get the same screens and answers.
+A Windows desktop emulator of the CASIO fx-991CE X ClassWiz scientific calculator (the Central European
+edition of the fx-991EX), for teaching: students and teacher press the same keys and get the same screens and
+answers. Like the physical calculator it shows Hungarian menus and messages, a decimal comma, `;` as the argument
+separator, `tg` for tangent, CODATA 2014 constants and the ATOMIC (periodic table / atomic weight) menu.
+English can be selected under SETUP ▸ Language as an extra; the physical calculator's language list may differ.
+Hungarian strings marked `//?` in `src/calc/i18n.js` are not yet confirmed against the device.
 
 Not affiliated with or endorsed by CASIO. CASIO and ClassWiz are trademarks of CASIO Computer Co., Ltd.
 This is a clean-room re-implementation built from the public User's Guide; it contains no CASIO ROM or code.
@@ -72,11 +76,12 @@ number formats. `npm test` checks the worked examples from the User's Guide.
 
 ## Checking parity against a physical calculator
 
-`npm run parity` runs 437 key sequences (taken from the User's Guide examples and from areas where the guide is
+`npm run parity` runs 447 key sequences (taken from the User's Guide examples and from areas where the guide is
 silent) through the emulator from a fresh Initialize All each, and writes `parity/parity-sheet.html`: every test
 with its keys drawn as keycaps, the emulator's screen, and Same/Differs toggles with a note field. Run the same keys
-on a physical fx-991EX and mark each test. The cases live in `tools/parity/cases.mjs`; rerun the command after
-changing the emulator to refresh the expected screens.
+on a physical fx-991CE X and mark each test. The cases live in `tools/parity/cases.mjs`; rerun the command after
+changing the emulator to refresh the expected screens. Test ids are positional and key the recorded results, so
+replace tests in place or append them at the end of a section.
 
 ## Development
 

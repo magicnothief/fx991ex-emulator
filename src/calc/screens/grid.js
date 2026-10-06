@@ -10,6 +10,7 @@ import * as V from '../../core/values.js';
 import { h, renderNodes, renderModel } from '../../ui/render.js';
 import { ErrorScreen } from './common.js';
 import { LINE_TEMPLATE } from './calcscreen.js';
+import { t } from '../i18n.js';
 
 /**
  * Short text for a value in a narrow cell. Digits that do not fit are cut off, not rounded
@@ -21,17 +22,18 @@ export function cellText(v, maxChars = 7) {
   if (V.isCx(v)) return 'cplx';
   for (let sd = 10; sd >= 1; sd--) {
     const m = formatDecimal(v.d.toSD(sd, Decimal.ROUND_DOWN), { mode: 'norm', digits: 1 });
-    const t = modelText(m).replace('×10^', 'E');
-    if (t.length <= maxChars) return t;
+    const text = modelText(m, { decimalMark: ',' }).replace('×10^', 'E');
+    if (text.length <= maxChars) return text;
   }
   for (let k = 6; k >= 0; k--) {
-    const t = v.d.toExponential(k, Decimal.ROUND_DOWN).replace('e+', 'E').replace('e-', 'E-');
-    if (t.length <= maxChars) return t;
+    const text = v.d.toExponential(k, Decimal.ROUND_DOWN).replace('.', ',').replace('e+', 'E').replace('e-', 'E-');
+    if (text.length <= maxChars) return text;
   }
   return '…';
 }
 
-const LP_PER_CHAR = 4.3;
+// Cells show at most six characters (sin x table: 0,7853 for 0,7853981634)
+const CELL_CHARS = 6;
 
 export class GridScreen {
   constructor(calc, spec) {
@@ -139,7 +141,7 @@ export class GridScreen {
     const table = h('table');
     for (let r = this.top; r < Math.min(this.rows, this.top + spec.visibleRows); r++) {
       table.append(h('tr', null, spec.cols.map((col, c) => {
-        const td = h('td', r === this.r && c === this.c ? 'sel' : null, cellText(spec.get(r, c), Math.floor(col.width / LP_PER_CHAR)));
+        const td = h('td', r === this.r && c === this.c ? 'sel' : null, cellText(spec.get(r, c), CELL_CHARS));
         td.style.width = `calc(var(--lp) * ${col.width})`;
         return td;
       })));
@@ -158,7 +160,7 @@ export class GridScreen {
     const el = h('div', 'grid-screen');
     const table = h('table');
     if (spec.header !== false) {
-      const head = h('tr', null, spec.rowNumbers ? h('th', null, '') : null, spec.cols.map((c) => h('th', null, c.label)));
+      const head = h('tr', null, spec.rowNumbers ? h('th', null, '') : null, spec.cols.map((c) => h('th', null, t(c.label))));
       table.append(head);
     }
     const rows = this.rows;
@@ -167,7 +169,7 @@ export class GridScreen {
       if (spec.rowNumbers) tr.append(h('td', 'rowno', String(r + 1)));
       spec.cols.forEach((col, c) => {
         const v = r < spec.rowCount() ? spec.get(r, c) : null;
-        const td = h('td', `cell${r === this.r && c === this.c ? ' sel' : ''}`, cellText(v, Math.floor(col.width / LP_PER_CHAR)));
+        const td = h('td', `cell${r === this.r && c === this.c ? ' sel' : ''}`, cellText(v, CELL_CHARS));
         td.style.width = `calc(var(--lp) * ${col.width})`;
         tr.append(td);
       });

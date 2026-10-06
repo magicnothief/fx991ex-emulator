@@ -5,9 +5,10 @@ import { CalcError, ERR } from '../../core/errors.js';
 import { solveLinear, polyRoots } from '../../core/numerics.js';
 import { solveInequality } from '../../core/inequality.js';
 import { h, renderModel } from '../../ui/render.js';
-import { GridScreen } from '../screens/grid.js';
+import { GridScreen, cellText } from '../screens/grid.js';
 import { Menu, Message, page, item, closeMenus, ErrorScreen } from '../screens/common.js';
 import { VARIABLE_KEYS } from '../keymap.js';
+import { t } from '../i18n.js';
 
 /** Blank bottom screen; OPTN reopens the mode's type menu. */
 class Root {
@@ -25,7 +26,7 @@ class Prompt {
     else if (ev.action === 'left') this.calc.pop();
     return true;
   }
-  view() { return { el: h('div', 'menu', this.lines.map((l) => h('div', 'item', l))) }; }
+  view() { return { el: h('div', 'menu', this.lines.map((l) => h('div', 'item', t(l)))) }; }
 }
 
 /** Shows labelled results one at a time; = / ▼ advance, ▲ goes back, STO assigns to a variable. */
@@ -60,7 +61,7 @@ class SolutionScreen {
     const it = this.items[this.i];
     const el = h('div', null);
     if (this.header) el.append(h('div', 'expr-area', this.header));
-    const row = h('div', 'result-area', h('span', null, h('span', 'm-row', it.label)), h('span', null, renderModel(this.calc.model(it.value, {}), {})));
+    const row = h('div', 'result-area', h('span', null, h('span', 'm-row', labelEl(it.label))), h('span', null, renderModel(this.calc.model(it.value, {}), {})));
     row.style.justifyContent = 'space-between';
     row.style.alignItems = 'center';
     el.append(row);
@@ -68,7 +69,10 @@ class SolutionScreen {
   }
 }
 
-const sub = (label, idx) => h('span', null, h('i', 'm-var', label), idx ? h('span', 'm-sub', String(idx)) : null, '=');
+/** Solution labels are data ({ name, idx } or plain text) and become DOM only in view(). */
+const sub = (name, idx) => ({ name, idx });
+const labelEl = (l) => (typeof l === 'string' ? l
+  : h('span', null, h('i', 'm-var', l.name), l.idx ? h('span', 'm-sub', String(l.idx)) : null, '='));
 
 function coefGrid(calc, md, { rows, labels, onEq, onOptn, defaultValue = N.ZERO, title }) {
   return new GridScreen(calc, {
@@ -233,7 +237,7 @@ class IneqResult {
   view() {
     const r = this.result;
     if (r === 'all' || r === 'none') {
-      return { el: h('div', 'message', h('div', null, r === 'all' ? 'All Real Numbers' : 'No Solution')) };
+      return { el: h('div', 'message', h('div', null, t(r === 'all' ? 'All Real Numbers' : 'No Solution'))) };
     }
     if (this.calc.setup.io !== 'mm') return this.letterView(r);
     const m = (v) => renderModel(this.calc.model(v, {}), {});
@@ -243,6 +247,7 @@ class IneqResult {
     r.forEach((s, i) => {
       if (i) parts.push(h('span', 'm-op', ','));
       if (s.point) parts.push(x(), h('span', 'm-op', '='), m(s.point));
+      else if (s.ne) parts.push(x(), h('span', 'm-op', '≠'), m(s.ne));
       else {
         if (s.lo) parts.push(m(s.lo), lt(s.loInc));
         parts.push(x());
@@ -262,7 +267,7 @@ class IneqResult {
     const values = [];
     const name = (v) => { values.push(v); return letters[values.length - 1]; };
     const lt = (inc) => (inc ? '≤' : '<');
-    const pattern = r.map((s) => (s.point ? `x=${name(s.point)}`
+    const pattern = r.map((s) => (s.point ? `x=${name(s.point)}` : s.ne ? `x≠${name(s.ne)}`
       : `${s.lo ? `${name(s.lo)}${lt(s.loInc)}` : ''}x${s.hi ? `${lt(s.hiInc)}${name(s.hi)}` : ''}`)).join(',');
     const rows = values.slice(this.offset / 40, this.offset / 40 + 3).map((v, i) => {
       const row = h('div', 'row', h('span', null, `${letters[this.offset / 40 + i]}=`), h('span', 'v', renderModel(this.calc.model(v, { form: 'dec' }), { line: true })));
@@ -296,7 +301,7 @@ function ratioMenu(calc) {
 function ratioEditor(calc) {
   const md = calc.modeData;
   const labels = md.kind === 'X:D' ? ['A', 'B', 'D'] : ['A', 'B', 'C'];
-  return coefGrid(calc, md, {
+  const grid = coefGrid(calc, md, {
     rows: 1,
     labels,
     defaultValue: N.ONE,
@@ -310,7 +315,20 @@ function ratioEditor(calc) {
       }
       const x = md.kind === 'X:D' ? N.div(N.mul(a, c), b) : N.div(N.mul(b, c), a);
       calc.setAns(x);
-      calc.push(new SolutionScreen(calc, [{ label: h('span', null, 'X='), value: x }]));
+      calc.push(new SolutionScreen(calc, [{ label: 'X=', value: x }]));
     },
   });
+  // one line, as on the calculator: "1 : 2 = X : 10" with the selected value highlighted
+  const gridView = grid.view.bind(grid);
+  grid.view = () => {
+    const r = gridView();
+    const field = (c) => h('span', `f${grid.c === c ? ' sel' : ''}`, cellText(md.coef[0][c], 6));
+    const parts = md.kind === 'X:D'
+      ? [field(0), ':', field(1), '=', 'X', ':', field(2)]
+      : [field(0), ':', field(1), '=', field(2), ':', 'X'];
+    r.el.querySelector('table').replaceWith(h('div', 'ratio-line', parts));
+    r.el.querySelector('.side')?.remove();
+    return r;
+  };
+  return grid;
 }

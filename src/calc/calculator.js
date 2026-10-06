@@ -1,9 +1,10 @@
 // The calculator: setup, memory, modifier keys, and a stack of screens.
 import * as N from '../core/num.js';
 import * as V from '../core/values.js';
-import { formatReal } from '../core/format.js';
+import { formatReal, complexFractionModel } from '../core/format.js';
 import { pack, unpack } from '../core/serialize.js';
 import { resolveKey } from './keymap.js';
+import { setLanguage } from './i18n.js';
 
 export const DEFAULT_SETUP = Object.freeze({
   io: 'mm',                 // mm MathI/MathO, md MathI/DecimalO, ll LineI/LineO, ld LineI/DecimalO
@@ -17,11 +18,11 @@ export const DEFAULT_SETUP = Object.freeze({
   sheetShowCell: 'formula',
   eqComplex: true,
   table: 'fg',              // 'f' = f(x), 'fg' = f(x),g(x)
-  decimalMark: 'dot',
-  digitSep: false,
+  digitSep: false,          // grouping with spaces (the fx-991CE X always uses a decimal comma)
   multiLineFont: 'normal',
   qr: 11,
   contrast: 5,
+  language: 'hu',           // kept by RESET, like Contrast
 });
 
 export const VAR_NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'M', 'x', 'y'];
@@ -41,6 +42,7 @@ export class Calculator {
     this.power = true;
     this.screens = [];
     this.load();
+    setLanguage(this.setup.language);
     this.enterMode(this.mode);
   }
 
@@ -135,6 +137,10 @@ export class Calculator {
       const theta = V.arg(v, this.setup.angle);
       return { t: 'polar', r: formatReal(r, this.setup, view), theta: formatReal(theta, this.setup, view) };
     }
+    if (this.setup.io === 'mm' && view.form !== 'dec') {
+      const combined = complexFractionModel(v.re, v.im);
+      if (combined) return combined;
+    }
     const re = N.isZero(v.re) && !N.isZero(v.im) ? null : formatReal(v.re, this.setup, view);
     const im = N.isZero(v.im) ? null : formatReal(v.im, this.setup, view);
     return { t: 'cplx', re, im };
@@ -170,6 +176,7 @@ export class Calculator {
       if (!raw) return;
       const data = JSON.parse(raw);
       this.setup = { ...structuredClone(DEFAULT_SETUP), ...data.setup };
+      delete this.setup.decimalMark; // setting of the international model, not on the fx-991CE X
       if (data.mode && this.modes[data.mode]) this.mode = data.mode;
       for (const [k, v] of Object.entries(data.vars || {})) this.mem.vars[k] = unpack(v);
       if (data.ans) this.mem.ans = unpack(data.ans);
@@ -183,8 +190,8 @@ export class Calculator {
   // ------------------------------------------------------------ RESET
 
   resetSetup() {
-    const contrast = this.setup.contrast;
-    this.setup = { ...structuredClone(DEFAULT_SETUP), contrast };
+    const { contrast, language } = this.setup;
+    this.setup = { ...structuredClone(DEFAULT_SETUP), contrast, language };
   }
 
   resetMemory() {

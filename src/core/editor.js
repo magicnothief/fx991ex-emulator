@@ -78,6 +78,8 @@ export class Editor {
     if (this.remaining() <= 1) return false;
     const node = tpl(id);
     const slot = this.slot;
+    // x▪ directly after an exponent box does nothing (2³ then x▪ stays 2³)
+    if (id === 'pow' && this.math && slot[this.idx - 1]?.k === 'tpl' && slot[this.idx - 1].id === 'pow') return false;
     if (this.insArmed) {
       // wrap the operand to the right of the cursor
       const end = operandEnd(slot, this.idx);

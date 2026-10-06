@@ -31,10 +31,15 @@ export function renderNodes(nodes, opts) {
 
 function renderLine(nodes, opts) {
   const row = h('span', 'expr-line');
+  const over = opts.cursorState?.overwrite;
   nodes.forEach((nd, i) => {
-    if (opts.cursor && opts.cursor.slot === nodes && opts.cursor.idx === i) row.append(cursorEl(opts.cursorState));
+    const here = opts.cursor && opts.cursor.slot === nodes && opts.cursor.idx === i;
     const info = tokenInfo(nd.id);
-    row.append(ITALIC_VARS.has(nd.id) ? h('i', 'm-var', info.text) : info.text);
+    const text = ITALIC_VARS.has(nd.id) ? h('i', 'm-var', info.text) : info.text;
+    // in overwrite mode the cursor underlines the character it will replace
+    if (here && over) { row.append(h('span', 'cursor under', text)); return; }
+    if (here) row.append(cursorEl(opts.cursorState));
+    row.append(text);
   });
   if (opts.cursor && opts.cursor.slot === nodes && opts.cursor.idx === nodes.length) row.append(cursorEl(opts.cursorState));
   return row;
@@ -98,8 +103,9 @@ function renderTemplate(nd, opts) {
 
 /** opts: { line: bool, decimalMark, digitSep } */
 export function renderModel(m, opts = {}) {
+  opts = { decimalMark: ',', ...opts }; // the fx-991CE X always shows a decimal comma
   if (opts.line) return h('span', null, modelText(m, opts));
-  const num = (s) => groupDigits(s.replace('.', opts.decimalMark || '.'), opts.digitSep, opts.decimalMark || '.');
+  const num = (s) => groupDigits(s.replace('.', opts.decimalMark), opts.digitSep, opts.decimalMark);
   const sign = (neg) => (neg ? h('span', 'm-neg', '-') : null);
   const frac = (n, d) => h('span', 'm-frac', h('span', 'm-num', n), h('span', 'm-den', d));
   switch (m.t) {
@@ -149,6 +155,17 @@ export function renderModel(m, opts = {}) {
       return h('span', 'm-row', parts);
     }
     case 'polar': return h('span', 'm-row', renderModel(m.r, opts), h('span', 'm-op', '∠'), renderModel(m.theta, opts));
+    case 'cfrac': {
+      const parts = [];
+      if (m.re) parts.push(renderModel(m.re, opts));
+      if (m.re) parts.push(h('span', 'm-op', m.im.neg ? '−' : '+'));
+      else if (m.im.neg) parts.push(h('span', 'm-neg', '-'));
+      const im = { ...m.im, neg: false };
+      const unit = im.terms.length === 1 && !im.terms[0].r && im.terms[0].c === '1';
+      if (!unit) parts.push(renderModel(im, opts));
+      parts.push(h('i', 'm-var', 'i'));
+      return frac(h('span', 'm-row', parts), m.den);
+    }
     default: return h('span', null, '?');
   }
 }

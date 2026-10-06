@@ -6,7 +6,7 @@ const T = (id, text, kind, extra = {}) => [id, { id, text, kind, ...extra }];
 const list = [
   ...'0123456789'.split('').map((d) => T(d, d, 'digit')),
   ...'ABCDEF'.split('').map((h) => T(`h${h}`, h, 'digit', { hex: true })),
-  T('.', '.', 'point'),
+  T('.', ',', 'point'), // fx-991CE X: decimal comma
   T('E', '×₁₀', 'exp'),
   // variables and values
   ...['A', 'B', 'C', 'D', 'E', 'F', 'M', 'x', 'y'].map((v) => T(`v${v}`, v, 'var', { name: v })),
@@ -25,7 +25,7 @@ const list = [
   T('neg', '-', 'prefix'),
   T('(', '(', 'open'),
   T(')', ')', 'close'),
-  T(',', ',', 'comma'),
+  T(',', ';', 'comma'), // argument separator shown as ';' (comma is the decimal mark)
   T(':', ':', 'colon'),
   T('=', '=', 'eq'),
   T('⌟', '⌟', 'frac'),
@@ -38,6 +38,7 @@ const list = [
   T('xor', ' xor ', 'binop'),
   T('xnor', ' xnor ', 'binop'),
   T('$', '$', 'dollar'),
+  T('AtWt', 'AtWt ', 'prefix', { atwt: true }), // atomic weight of the following atomic number (fx-991CE X)
   // postfix
   T('²', '²', 'postfix'),
   T('³', '³', 'postfix'),
@@ -60,10 +61,10 @@ const list = [
   ...['d', 'h', 'b', 'o'].map((b) => T(`base${b}`, b, 'prefix', { base: b })),
   // functions that open a parenthesis
   ...[
-    ['sin(', 'sin('], ['cos(', 'cos('], ['tan(', 'tan('],
-    ['asin(', 'sin⁻¹('], ['acos(', 'cos⁻¹('], ['atan(', 'tan⁻¹('],
-    ['sinh(', 'sinh('], ['cosh(', 'cosh('], ['tanh(', 'tanh('],
-    ['asinh(', 'sinh⁻¹('], ['acosh(', 'cosh⁻¹('], ['atanh(', 'tanh⁻¹('],
+    ['sin(', 'sin('], ['cos(', 'cos('], ['tan(', 'tg('],
+    ['asin(', 'sin⁻¹('], ['acos(', 'cos⁻¹('], ['atan(', 'tg⁻¹('],
+    ['sinh(', 'sinh('], ['cosh(', 'cosh('], ['tanh(', 'tgh('],
+    ['asinh(', 'sinh⁻¹('], ['acosh(', 'cosh⁻¹('], ['atanh(', 'tgh⁻¹('],
     ['log(', 'log('], ['ln(', 'ln('], ['10^(', '10^('], ['e^(', 'e^('],
     ['√(', '√('], ['∛(', '³√('], ['^(', '^('], ['xroot(', 'ˣ√('],
     ['Abs(', 'Abs('], ['Pol(', 'Pol('], ['Rec(', 'Rec('], ['Rnd(', 'Rnd('],

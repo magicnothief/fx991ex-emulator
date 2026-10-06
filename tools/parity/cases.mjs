@@ -1,4 +1,6 @@
-// Parity test cases: key sequences to run on a physical fx-991EX and on the emulator.
+// Parity test cases: key sequences to run on a physical fx-991CE X and on the emulator.
+// Test ids are positional (A01, A02, …) and key the recorded results: replace tests in place or append
+// them at the end of a section, never insert or remove, so earlier results stay with their test.
 // Key ids are the hardware keys (see src/calc/keymap.js). Every section starts from Initialize All
 // (SHIFT 9 3 = AC) followed by the section's `start` keys; each test then begins with keys that bring
 // the calculator to a known screen, so tests can be run one after another on the physical unit.
@@ -21,8 +23,8 @@ const statFreq = (on) => `SHIFT MENU DOWN 3 ${on ? 1 : 2} AC`;
 const showCellValue = () => 'SHIFT MENU DOWN 4 2 2 AC';
 const eqComplex = (on) => `SHIFT MENU DOWN DOWN 1 ${on ? 1 : 2} AC`;
 const table = (fg) => `SHIFT MENU DOWN DOWN 2 ${fg ? 2 : 1} AC`;
-const decMark = (comma) => `SHIFT MENU DOWN DOWN 3 ${comma ? 2 : 1} AC`;
-const digitSep = (on) => `SHIFT MENU DOWN DOWN 4 ${on ? 1 : 2} AC`;
+// fx-991CE X SETUP page 3: Equation/Func, Table, Digit Separator, MultiLine Font (no Decimal Mark)
+const digitSep = (on) => `SHIFT MENU DOWN DOWN 3 ${on ? 1 : 2} AC`;
 
 // ---------------------------------------------------------------- reusable data entry
 const MAT_A = 'MENU 4 1 2 2 2 EQ 1 EQ 1 EQ 1 EQ AC'; // MatA = [2 1; 1 1]
@@ -141,14 +143,16 @@ export const SECTIONS = [
       t('… then ENG (p.12)', `AC ${engSym(1)} 9 9 9 OPTN 3 6 ADD 2 5 OPTN 3 6 EQ ENG`, { manual: '1024k' }),
       t('Engineer Symbol: 1÷2', `AC ${engSym(1)} 1 DIV 2 SHIFT EQ`),
       t('Fraction Result ab/c', `AC ${engSym(0)} ${fracResult(1)} 7 DIV 3 EQ`, { core: true }),
-      t('Decimal Mark: Comma', `AC ${fracResult(0)} ${decMark(1)} 1 DIV 4 SHIFT EQ`),
-      t('Digit Separator: On', `AC ${decMark(0)} ${digitSep(1)} 1 2 3 4 5 6 7 MUL 8 EQ`),
+      t('Decimal comma', `AC ${fracResult(0)} ${digitSep(0)} 1 DIV 4 SHIFT EQ`),
+      t('Digit Separator: On', `AC ${digitSep(1)} 1 2 3 4 5 6 7 MUL 8 EQ`),
       t('SETUP menu, page 1', `AC ${digitSep(0)} SHIFT MENU`, { core: true }),
       t('SETUP menu, page 2', 'AC SHIFT MENU DOWN'),
       t('SETUP menu, page 3', 'AC SHIFT MENU DOWN DOWN'),
       t('SETUP menu, page 4', 'AC SHIFT MENU DOWN DOWN DOWN'),
       t('Input/Output submenu', 'AC SHIFT MENU 1'),
       t('Number Format submenu', 'AC SHIFT MENU 3'),
+      t('Language list (fx-991CE X)', 'AC SHIFT MENU DOWN DOWN DOWN 1'),
+      t('MultiLine Font submenu', 'AC SHIFT MENU DOWN DOWN 4'),
     ],
   },
   {
@@ -515,11 +519,11 @@ export const SECTIONS = [
       t('Grab: =A2+7 in B2 (p.34 Ex 2)', `${SHEET_B1} ALPHA CALC OPTN 2 LEFT EQ ADD 7 EQ`, { manual: 'B2 = 49' }),
       t('=Sum(A1:A3) in A4 (p.35 Ex 3)', `${SHEET_B1} LEFT DOWN DOWN ALPHA CALC OPTN DOWN 4 ALPHA NEG 1 ALPHA INT ALPHA NEG 3 RP EQ`, { manual: 'A4 = 126', core: true }),
       t('Formula shown in the edit box', `${SHEET_B1} LEFT DOWN DOWN ALPHA CALC OPTN DOWN 4 ALPHA NEG 1 ALPHA INT ALPHA NEG 3 RP EQ UP`),
-      t('Fill Formula B1:B3 =2A1−3 (p.36 Ex 4)', `${SHEET_B1} UP OPTN 1 2 ALPHA NEG 1 SUB 3 EQ RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT DEL 3 EQ`, { manual: 'B1–B3 = 67, 81, 95', core: true }),
-      t('Fill Value C1:C3 = B1×3 (p.36 Ex 5)', `${SHEET_B1} UP OPTN 1 2 ALPHA NEG 1 SUB 3 EQ RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT DEL 3 EQ RIGHT OPTN 2 ALPHA DMS 1 MUL 3 EQ RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT DEL 3 EQ`, { manual: 'C1–C3 = 201, 243, 285' }),
+      t('Fill Formula B1:B3 =2A1−3 (p.36 Ex 4)', `${SHEET_B1} UP OPTN 1 2 ALPHA NEG 1 SUB 3 EQ RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT DEL 3 EQ EQ`, { manual: 'B1–B3 = 67, 81, 95', core: true }),
+      t('Fill Value C1:C3 = B1×3 (p.36 Ex 5)', `${SHEET_B1} UP OPTN 1 2 ALPHA NEG 1 SUB 3 EQ RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT DEL 3 EQ EQ RIGHT OPTN 2 ALPHA DMS 1 MUL 3 EQ RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT DEL 3 EQ EQ`, { manual: 'C1–C3 = 201, 243, 285' }),
       t('Copy & Paste moves relative references (p.34)', `${SHEET_B1} UP OPTN DOWN 2 DOWN DOWN EQ`, { manual: 'B3: =A3+7', core: true }),
       t('Cut & Paste keeps references (p.35)', `${SHEET_B1} UP OPTN DOWN 1 RIGHT EQ`),
-      t('Absolute reference $A$1 (p.34)', `${SHEET} UP UP UP RIGHT ALPHA CALC OPTN 1 ALPHA NEG OPTN 1 1 ADD 7 EQ UP OPTN DOWN 2 DOWN EQ`),
+      t('Absolute reference $A$1 (p.34)', `${SHEET} UP UP UP RIGHT ALPHA CALC OPTN 1 ALPHA NEG OPTN 1 1 ADD 7 EQ UP OPTN DOWN 2 DOWN EQ AC`),
       t('Circular reference (p.39)', 'MENU 8 ALPHA CALC ALPHA NEG 1 EQ', { manual: 'Circular ERROR', core: true }),
       t('=Mean(A1:A3)', `${SHEET} ALPHA CALC OPTN DOWN 3 ALPHA NEG 1 ALPHA INT ALPHA NEG 3 RP EQ`),
       t('Edit Cell (p.34)', `${SHEET_B1} UP OPTN 3`),
@@ -571,14 +575,23 @@ export const SECTIONS = [
       t('1 acre▸m²', 'AC 1 SHIFT 8 2 1 EQ', { core: true }),
       t('1 gal(US)▸L', 'AC 1 SHIFT 8 3 1 EQ'),
       t('1 lb▸kg', 'AC 1 SHIFT 8 4 3 EQ', { core: true }),
-      t('100 km/h▸m/s', 'AC 1 0 0 SHIFT 8 DOWN 1 1 EQ'),
-      t('1 mmHg▸Pa', 'AC 1 SHIFT 8 DOWN 2 3 EQ', { core: true }),
-      t('1 lbf/in²▸kPa', 'AC 1 SHIFT 8 DOWN 2 7 EQ'),
-      t('1 J▸cal (15 °C calorie, p.37)', 'AC 1 SHIFT 8 DOWN 3 3 EQ', { core: true }),
-      t('1 hp▸kW', 'AC 1 SHIFT 8 DOWN 4 1 EQ', { core: true }),
-      t('100 °F▸°C', 'AC 1 0 0 SHIFT 8 DOWN DOWN 1 1 EQ'),
-      t('−40 °C▸°F', 'AC NEG 4 0 SHIFT 8 DOWN DOWN 1 2 EQ'),
+      t('100 atm▸Pa', 'AC 1 0 0 SHIFT 8 DOWN 1 1 EQ'),
+      t('1 mmHg▸Pa', 'AC 1 SHIFT 8 DOWN 1 3 EQ', { core: true }),
+      t('1 lbf/in²▸kPa', 'AC 1 SHIFT 8 DOWN 1 7 EQ'),
+      t('1 J▸cal (15 °C calorie, p.37)', 'AC 1 SHIFT 8 DOWN 2 3 EQ', { core: true }),
+      t('1 hp▸kW', 'AC 1 SHIFT 8 DOWN 3 1 EQ', { core: true }),
+      t('100 °F▸°C', 'AC 1 0 0 SHIFT 8 DOWN 4 1 EQ'),
+      t('−40 °C▸°F', 'AC NEG 4 0 SHIFT 8 DOWN 4 2 EQ'),
       t('5 cm▸in in LineI/LineO (p.37)', `AC ${io(3)} 5 SHIFT 8 1 2 EQ`, { manual: '1.968503937', core: true }),
+      // ATOMIC (SHIFT 4), fx-991CE X only
+      t('ATOMIC menu', 'AC SHIFT 4', { core: true }),
+      t('Periodic table, first screen', 'AC SHIFT 4 1', { core: true }),
+      t('Periodic table: ▼▼▼▶▶ and = inserts AtWt', 'AC SHIFT 4 1 DOWN DOWN DOWN RIGHT RIGHT EQ'),
+      t('AtWt 21 (Sc)', 'AC SHIFT 4 2 2 1 EQ', { manual: '44,955908', core: true }),
+      t('AtWt 43 (Tc, no stable isotope)', 'AC SHIFT 4 2 4 3 EQ'),
+      t('AtWt 1 + AtWt 8 × 2', 'AC SHIFT 4 2 1 ADD SHIFT 4 2 8 MUL 2 EQ'),
+      t('AtWt 119', 'AC SHIFT 4 2 1 1 9 EQ'),
+      t('ATOMIC in Base-N', 'MENU 3 SHIFT 4'),
     ],
   },
 ];

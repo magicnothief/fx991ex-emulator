@@ -129,9 +129,9 @@ export function pow(a, b) {
     return polarPow(a, b);
   }
   if (scalar(a) && scalar(b)) {
-    if (isCx(b)) fail(ERR.MATH);
-    if (isReal(a) && N.sign(a) >= 0) return N.pow(a, b);
-    return polarPow(a, b);
+    // only real non-negative bases take non-integer powers ((1+i)^0,5 → Matematikai HIBA)
+    if (isCx(b) || !isReal(a)) fail(ERR.MATH);
+    return N.pow(a, b);
   }
   fail(ERR.SYNTAX);
 }

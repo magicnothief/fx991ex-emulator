@@ -7,6 +7,7 @@ import { CalcScreen } from '../screens/calcscreen.js';
 import { GridScreen } from '../screens/grid.js';
 import { Menu, page, item, closeMenus } from '../screens/common.js';
 import { commonOptnPage } from '../screens/menus.js';
+import { t } from '../i18n.js';
 
 const tokItem = (screen, label, id) => item(label, (calc) => { closeMenus(calc); screen.apply(`tok:${id}`); });
 
@@ -65,7 +66,7 @@ class SizePrompt {
   }
 
   view() {
-    return { el: h('div', 'menu', this.lines.map((l) => h('div', 'item', l))) };
+    return { el: h('div', 'menu', this.lines.map((l) => h('div', 'item', t(l)))) };
   }
 }
 

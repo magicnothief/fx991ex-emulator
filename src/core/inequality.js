@@ -53,6 +53,8 @@ export function solveInequality(coefs, op) {
   });
   if (segs.length === 1 && segs[0].lo === null && segs[0].hi === null) return 'all';
   if (segs.length === 0) return 'none';
+  // every interval holds and only the roots are excluded: shown as x≠a (x²−2x+1>0 → x≠1)
+  if (strict && inSet.every(Boolean)) return roots.map((r) => ({ ne: r.v }));
   return segs;
 }
 

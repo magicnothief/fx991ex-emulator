@@ -41,8 +41,9 @@ export class Stats {
     return this.data().reduce((s, r) => N.add(s, N.mul(r.f, fn(r))), N.ZERO);
   }
 
+  /** Statistics are decimal-type results (an even-count median shows 3,5, not 7/2). */
   value(id) {
-    return this.get(id, () => this.compute(id));
+    return this.get(id, () => dec(this.compute(id)));
   }
 
   compute(id) {

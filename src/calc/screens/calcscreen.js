@@ -11,6 +11,7 @@ import * as V from '../../core/values.js';
 import { h, renderNodes, renderModel } from '../../ui/render.js';
 import { VARIABLE_KEYS } from '../keymap.js';
 import { ErrorScreen } from './common.js';
+import { atomicMenu } from './atomic.js';
 
 // Keys that continue from the previous result with "Ans".
 const CONTINUES = new Set(['tok:+', 'tok:-', 'tok:×', 'tok:÷', 'tok:²', 'tok:³', 'tok:⁻¹', 'tok:!', 'tok:%', 'tok:P', 'tok:C',
@@ -73,6 +74,10 @@ export class CalcScreen {
       case 'solve': return this.startSolve();
       case 'optn': if (this.hooks.optn) this.calc.push(this.hooks.optn(this)); return true;
       case 'const': this.calc.push(this.calc.modes.$menus.constMenu(this.calc, (id) => this.apply(id))); return true;
+      case 'atomic':
+        // atomic weights can be used in every mode except Base-N
+        if (this.calc.mode !== 'base') this.calc.push(atomicMenu(this.calc, (id) => this.apply(id)));
+        return true;
       case 'conv': this.calc.push(this.calc.modes.$menus.convMenu(this.calc, (id) => this.apply(id))); return true;
       case 'sd': case 'mixed': case 'eng': case 'engleft': case 'fact': return this.resultToggle(a);
       case 'dms': return this.phase === 'result' ? this.resultToggle(a) : this.apply('tok:dms');
@@ -425,8 +430,8 @@ export class CalcScreen {
     const { value, view } = this.result;
     const line = !this.math;
     const area = h('div', `result-area${line ? ' line' : ''}`);
-    const opts = { line, decimalMark: this.calc.setup.decimalMark === 'comma' ? ',' : '.', digitSep: this.calc.setup.digitSep };
-    const sep = this.calc.setup.decimalMark === 'comma' ? '; ' : ', ';
+    const opts = { line, digitSep: this.calc.setup.digitSep };
+    const sep = '; '; // results separator with a decimal comma (User's Guide HU p.16: r=2; θ=45)
     if (value.pair) {
       const parts = value.labels.flatMap((l, i) => [i ? sep : '', h('i', 'm-var', l), '=', renderModel(this.calc.model(value.values[i], view), opts)]);
       area.append(h('span', 'm-row', parts));

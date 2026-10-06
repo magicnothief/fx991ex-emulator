@@ -236,6 +236,10 @@ class Parser {
   implicit() {
     let a = this.conversion();
     while (this.startsOperand()) {
+      // a number right after a power is not an implied multiplication: 2³2 is a Syntax ERROR
+      const prev = this.items[this.i - 1];
+      const afterPower = prev && ((prev.ty === 'tpl' && prev.id === 'pow') || (prev.ty === 'tok' && ['²', '³', '⁻¹'].includes(prev.id)));
+      if (afterPower && this.peek().ty === 'num') throw syntax(this.posHere());
       // a template that only extends the previous operand (powers) never starts a new one
       if (this.peek().ty === 'tpl' && this.peek().id === 'pow') throw syntax(this.posHere());
       a = { t: 'bin', op: 'imul', a, b: this.conversion() };
@@ -259,6 +263,10 @@ class Parser {
     if (it && it.ty === 'tok' && it.id === 'neg') {
       this.next();
       return { t: 'neg', a: this.negation() };
+    }
+    if (it && it.ty === 'tok' && it.id === 'AtWt') {
+      this.next();
+      return { t: 'call', fn: 'AtWt', args: [this.negation()] };
     }
     if (it && it.ty === 'tok' && it.info.base) throw syntax(it.pos); // prefix outside Base-N
     return this.fraction();

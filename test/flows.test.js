@@ -161,6 +161,35 @@ test('decimal-type results stay decimal in MathI/MathO (pp.23, 37)', () => {
   assert.equal(result(c), '0.19324');
   assert.equal(result(keys(fresh(), '5 SHIFT 8 1 2 EQ')), '1.968503937');
   assert.equal(result(keys(fresh(), 'SHIFT MENU 1 3 5 SHIFT 8 1 2 EQ')), '1.968503937');
-  assert.equal(result(keys(fresh(), 'SHIFT 7 DOWN 2 1 EQ')), '-273.15');
-  assert.equal(result(keys(fresh(), 'SHIFT 7 DOWN 2 1 EQ SD')), '-5463⌟20', 'S⇔D still offers the fraction');
+  assert.equal(result(keys(fresh(), 'SHIFT 7 DOWN 2 1 EQ')), '273.15');
+  assert.equal(result(keys(fresh(), 'SHIFT 7 DOWN 2 1 EQ SD')), '5463⌟20', 'S⇔D still offers the fraction');
+});
+
+// ---------------------------------------------------------------- fx-991CE X, from the physical parity sheet
+
+test('fx-991CE X calculation results observed on the physical unit', () => {
+  const r = (seq) => result(keys(fresh(), seq));
+  assert.equal(r('AC INT ALPHA RP SQR RIGHT 0 RIGHT 1 EQ'), '1⌟3'); // G02
+  assert.equal(r('AC INT 4 FRAC 1 ADD ALPHA RP SQR RIGHT RIGHT 0 RIGHT 1 EQ'), 'π'); // G03
+  assert.equal(r('AC INT ALPHA RP RIGHT 1 RIGHT 0 EQ'), '-1⌟2'); // G05
+  assert.equal(r('AC SIN 1 8 RP EQ'), '0.3090169944'); // E09
+  assert.equal(r('AC SHIFT LOG 0 DOT 5 EQ'), '3.16227766'); // E36
+  assert.equal(r('AC 2 POW 1 FRAC 2 EQ'), '1.414213562'); // E39
+  assert.equal(r('SHIFT MENU 2 2 AC SIN 3 DOT 1 4 1 5 9 2 6 5 3 5 8 9 7 9 RP EQ'), '0'); // F10
+  assert.equal(r('SHIFT MENU 2 2 AC SHIFT ADD 1 SHIFT RP 1 RP EQ'), 'r=1.414213562, θ=0.7853981634'); // F13
+  assert.equal(r('SHIFT MENU 3 1 0 AC 5 DIV 2 SHIFT EQ'), '3.'); // C16 (shown as 3,)
+  assert.equal(r('SHIFT MENU 3 1 2 AC 1 EXP 1 2 EQ'), '1×10^12'); // C17
+  assert.equal(r('SHIFT 4 2 2 1 EQ'), '44.955908'); // ATOMIC, User's Guide HU p.39
+  assert.equal(keys(fresh(), 'AC SHIFT X ALPHA RP RIGHT 1 DOT 5 RIGHT 3 EQ').top.kind, 'Argument ERROR'); // G12
+  assert.equal(keys(fresh(), 'MENU 2 LP 1 ADD ENG RP POW 0 DOT 5 EQ').top.kind, 'Math ERROR'); // I14
+  assert.equal(keys(fresh(), 'AC 2 POW 3 RIGHT POW 2 EQ').top.kind, 'Syntax ERROR'); // A09
+});
+
+test('Base-N ignores the decimal key (J15)', () => {
+  const c = keys(fresh(), 'MENU 3 1 DOT 5');
+  assert.deepEqual(c.top.editor.root.map((n) => n.id), ['1', '5']);
+});
+
+test('Statistics median is decimal (M12)', () => {
+  assert.equal(result(keys(fresh(), 'MENU 6 1 1 EQ 2 EQ 3 EQ 4 EQ 5 EQ 6 EQ AC OPTN DOWN 3 3 EQ')), '3.5');
 });

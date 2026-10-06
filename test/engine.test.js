@@ -184,8 +184,15 @@ test('equations, inequalities, ratio', () => {
   assert.deepEqual(sol.map((x) => x.d.toString()), ['-1', '2']);
   const roots = polyRoots([L('1'), L('2'), L('-2')]);
   assert.deepEqual(roots.map((r) => show(r)), ['-1+√3', '-1-√3']);
+  // a cubic lists its smallest real root first, then the other two descending (parity sheet P18–P22)
   const cubic = polyRoots([L('3'), L('3'), L('-1'), L('0')]);
-  assert.deepEqual(cubic.map((r) => show(r)), ['(-3+√21)/6', '0', '(-3-√21)/6']);
+  assert.deepEqual(cubic.map((r) => show(r)), ['(-3-√21)/6', '(-3+√21)/6', '0']);
+  assert.deepEqual(polyRoots([L('1'), L('-6'), L('11'), L('-6')]).map((r) => show(r)), ['1', '3', '2']);
+  assert.match(show(polyRoots([L('1'), L('0'), L('-3'), L('1')])[0]), /^-1\.879385/);
+  assert.deepEqual(polyRoots([L('1'), L('0'), L('-5'), L('0'), L('4')]).map((r) => show(r)), ['2', '1', '-1', '-2']);
+  // x⁴+1: roots found numerically are shown exactly when they are √ forms (parity sheet P25)
+  const q4 = polyRoots([L('1'), L('0'), L('0'), L('0'), L('1')]);
+  assert.equal(show(q4[0]), '√2/2+√2/2i');
   // 1:2 = X:10
   assert.equal(show(N.div(N.mul(L('1'), L('10')), L('2'))), '5');
 });
@@ -193,14 +200,14 @@ test('equations, inequalities, ratio', () => {
 test('inequalities', async () => {
   const { solveInequality } = await import('../src/core/inequality.js');
   const P = (...cs) => cs.map((c) => L(String(c)));
-  const text = (r) => (typeof r === 'string' ? r : r.map((s) => (s.point ? `x=${show(s.point)}`
+  const text = (r) => (typeof r === 'string' ? r : r.map((s) => (s.point ? `x=${show(s.point)}` : s.ne ? `x≠${show(s.ne)}`
     : `${s.lo ? `${show(s.lo)}${s.loInc ? '≤' : '<'}` : ''}x${s.hi ? `${s.hiInc ? '≤' : '<'}${show(s.hi)}` : ''}`)).join(', '));
   assert.equal(text(solveInequality(P(3, 3, -1, 0), '>')), '(-3-√21)/6<x<0, (-3+√21)/6<x'); // manual example
   assert.equal(text(solveInequality(P(1, 2, -3), '<')), '-3<x<1');
   assert.equal(text(solveInequality(P(1, 0, 0), '≥')), 'all');
   assert.equal(text(solveInequality(P(1, 0, 0), '<')), 'none');
   assert.equal(text(solveInequality(P(1, -2, 1), '≤')), 'x=1');
-  assert.equal(text(solveInequality(P(1, -2, 1), '>')), 'x<1, 1<x');
+  assert.equal(text(solveInequality(P(1, -2, 1), '>')), 'x≠1'); // fx-991CE X (parity sheet Q08)
   assert.equal(text(solveInequality(P(1, 0, -4), '≥')), 'x≤-2, 2≤x');
 });
 

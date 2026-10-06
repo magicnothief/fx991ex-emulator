@@ -12,6 +12,7 @@ import { Menu, Message, page, item, closeMenus, ErrorScreen } from '../screens/c
 import { commonOptnPage } from '../screens/menus.js';
 import { LINE_TEMPLATE, RecallScreen } from '../screens/calcscreen.js';
 import { VARIABLE_KEYS } from '../keymap.js';
+import { t } from '../i18n.js';
 
 const COLS = ['A', 'B', 'C', 'D', 'E'];
 const ROWS = 45;
@@ -288,9 +289,9 @@ class Sheet {
           close();
           const cell = this.cells[name(this.c, this.r)];
           this.editor = new Editor(this.math);
-          if (cell) this.editor.load(cell.formula ? [tok('='), ...cell.formula] : cell.nodes ?? []);
+          if (cell) this.editor.load(cell.formula ? [tok('='), ...cell.formula] : cell.nodes ?? [], false);
         }),
-        item('Free Space', () => { close(); calc.push(new Message(calc, ['Free Space', `${CAPACITY - this.used()} Bytes`])); }),
+        item('Free Space', () => { close(); calc.push(new Message(calc, ['Free Space', `${CAPACITY - this.used()} ${t('Bytes')}`])); }),
       ]),
       page([
         item('Cut & Paste', () => { close(); this.paste = { mode: 'cut', from: [this.r, this.c] }; }),
@@ -327,7 +328,7 @@ class Sheet {
       const tr = h('tr', null, h('td', 'rowno', String(r + 1)));
       for (const c of visCols) {
         const cell = this.cells[name(c, r)];
-        const text = cell ? (cell.value === 'ERROR' ? 'ERROR' : cell.value ? cellText(cell.value, 7) : '') : '';
+        const text = cell ? (cell.value === 'ERROR' ? 'ERROR' : cell.value ? cellText(cell.value, 6) : '') : '';
         const td = h('td', `cell${r === hl.r && c === hl.c ? ' sel' : ''}`, text);
         td.style.width = 'calc(var(--lp) * 42)';
         tr.append(td);
@@ -336,7 +337,8 @@ class Sheet {
     }
     el.append(table);
     const footer = h('div', `footer${this.editor && !this.grab ? ' edit' : ''}`);
-    if (this.grab) footer.append('Set:[=]');
+    if (this.grab) footer.append(t('Set:[=]'));
+    else if (this.paste) footer.append(t('Paste:[=]'));
     else if (this.editor) footer.append(renderNodes(this.editor.root, { math: this.math, cursor: this.editor.cursor(), cursorState: {} }));
     else {
       const cell = this.cells[name(this.c, this.r)];
@@ -362,21 +364,38 @@ class FillDialog {
     for (const id of [`v${here[0]}`, ...here.slice(1), ':', `v${here[0]}`, ...here.slice(1)]) this.range.insert(id);
   }
 
+  /**
+   * Editing a line starts with any edit key; = confirms that line (moving from Form to Range),
+   * and = on Range when not editing applies the fill (User's Guide pp.36–37: "… DEL 3 =" then "=").
+   */
   handle(ev) {
     const a = ev.action || '';
     const ed = this.line === 0 ? this.value : this.range;
     switch (a) {
-      case 'up': case 'down': this.line = 1 - this.line; return true;
-      case 'ac': this.calc.pop(); return true;
-      case 'del': ed.del(); return true;
-      case 'left': ed.left(); return true;
-      case 'right': ed.right(); return true;
+      case 'up': case 'down':
+        if (!this.editing) this.line = 1 - this.line;
+        return true;
+      case 'ac':
+        if (this.editing) this.editing = false;
+        else this.calc.pop();
+        return true;
+      case 'del': this.editing = true; ed.del(); return true;
+      case 'left': this.editing = true; ed.left(); return true;
+      case 'right': this.editing = true; ed.right(); return true;
       case 'eq':
+        if (this.editing) {
+          this.editing = false;
+          if (this.line === 0) this.line = 1;
+          return true;
+        }
         if (this.line === 0) { this.line = 1; return true; }
         return this.apply();
       default: {
         const m = /^(tok|var):(.*)$/.exec(a);
-        if (m) ed.insert(m[1] === 'var' ? `v${m[2]}` : m[2]);
+        if (m) {
+          this.editing = true;
+          ed.insert(m[1] === 'var' ? `v${m[2]}` : m[2]);
+        }
         return true;
       }
     }
@@ -410,13 +429,13 @@ class FillDialog {
   view() {
     const row = (label, ed, sel) => {
       const r = h('div', `row${sel ? ' inv' : ''}`, h('span', null, `${label.padEnd(6, ' ')}:`));
-      const v = h('span', 'v', renderNodes(ed.root, { math: false, cursor: sel ? ed.cursor() : null, cursorState: {} }));
+      const v = h('span', 'v', renderNodes(ed.root, { math: false, cursor: sel && this.editing ? ed.cursor() : null, cursorState: {} }));
       v.style.marginRight = 'auto';
       r.append(v);
       return r;
     };
-    const el = h('div', 'kv', h('div', 'row', h('span', 'title', this.formula ? 'Fill Formula' : 'Fill Value')),
-      row(this.formula ? 'Form' : 'Value', this.value, this.line === 0), row('Range', this.range, this.line === 1));
+    const el = h('div', 'kv', h('div', 'row', h('span', 'title', t(this.formula ? 'Fill Formula' : 'Fill Value'))),
+      row(t(this.formula ? 'Form' : 'Value'), this.value, this.line === 0), row(t('Range'), this.range, this.line === 1));
     return { el, status: { noMath: true } };
   }
 }

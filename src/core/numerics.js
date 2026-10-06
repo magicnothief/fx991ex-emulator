@@ -171,8 +171,8 @@ export function solveLinear(A, b) {
 export function polyRoots(coefs) {
   if (N.isZero(coefs[0])) fail(ERR.MATH);
   const exact = coefs.every((c) => N.ratOf(c) !== null);
-  if (exact) return exactRoots(coefs.map((c) => N.ratOf(c)));
-  return numericRoots(coefs);
+  const roots = exact ? exactRoots(coefs.map((c) => N.ratOf(c))) : numericRoots(coefs);
+  return orderRoots(roots, coefs.length - 1);
 }
 
 function exactRoots(q) {
@@ -188,7 +188,7 @@ function exactRoots(q) {
   if (poly.length === 3) roots.push(...quadraticExact(poly));
   else if (poly.length === 2) roots.push(N.fromRat(Q.neg(Q.div(poly[1], poly[0]))));
   else if (poly.length > 3) return numericRoots(q.map((r) => N.fromRat(r)));
-  return orderRoots(roots);
+  return roots;
 }
 
 function deflate(poly, r) {
@@ -240,10 +240,47 @@ function quadraticExact([a, b, c]) {
   return [V.cx(reP, imP), V.cx(reP, N.neg(imP))];
 }
 
-function orderRoots(roots) {
+/**
+ * Display order observed on the fx-991CE X: real roots descending, then complex roots (larger real
+ * part, positive imaginary part first). A cubic lists its smallest real root first and the other two
+ * as the quadratic solver would: x³−6x²+11x−6 → 1, 3, 2; x³−1 → 1, (−1+√3i)/2, (−1−√3i)/2.
+ */
+function orderRoots(roots, degree) {
   const reals = roots.filter((r) => !V.isCx(r)).sort((x, y) => -N.cmp(x, y));
-  const cplx = roots.filter((r) => V.isCx(r));
+  const cplx = roots.filter((r) => V.isCx(r)).sort((x, y) => -N.cmp(x.re, y.re) || -N.cmp(x.im, y.im));
+  if (degree === 3 && reals.length) reals.unshift(reals.pop());
   return [...reals, ...cplx];
+}
+
+/** Continued-fraction convergent within tol of h with a denominator below 10⁶, or null. */
+function ratNear(h, tol) {
+  const sign = h.s < 0 ? -1n : 1n;
+  const target = h.abs();
+  let v = target;
+  let [h0, h1, k0, k1] = [0n, 1n, 1n, 0n];
+  for (let i = 0; i < 40; i++) {
+    const a = BigInt(v.floor().toFixed(0));
+    [h0, h1] = [h1, a * h1 + h0];
+    [k0, k1] = [k1, a * k1 + k0];
+    if (k1 > 1000000n) return null;
+    if (new H(h1.toString()).div(k1.toString()).sub(target).abs().lte(tol)) return Q.rat(sign * h1, k1);
+    const frac = v.sub(v.floor());
+    if (frac.isZero()) return null;
+    v = new H(1).div(frac);
+  }
+  return null;
+}
+
+/** A numerically found root part, exact when it is a fraction or a single √ term (x⁴+1: √2/2). */
+function identify(h) {
+  const q = ratNear(h, '1e-25');
+  if (q) return N.fromRat(q);
+  const sq = ratNear(h.mul(h), '1e-24');
+  if (sq) {
+    const s = N.sqrt(N.fromRat(sq));
+    if (s.x) return h.s < 0 ? N.neg(s) : s;
+  }
+  return N.fromDec(h);
 }
 
 /** Durand–Kerner in 40-digit precision, then cleanup of tiny imaginary parts. */
@@ -277,15 +314,11 @@ function numericRoots(coefs) {
     if (delta.lt('1e-35')) break;
   }
   const scaleRe = z.reduce((m, r) => H.max(m, r[0].abs().add(r[1].abs())), new H(1));
-  const roots = z.map(([re, im]) => {
-    const r = N.fromDec(re);
+  return z.map(([re, im]) => {
+    const r = identify(re);
     if (im.abs().lt(scaleRe.mul('1e-20'))) return r;
-    return V.cx(r, N.fromDec(im));
+    return V.cx(r, identify(im));
   });
-  // conjugate pairs: positive imaginary part first
-  const reals = roots.filter((r) => !V.isCx(r)).sort((x, y) => -N.cmp(x, y));
-  const cplx = roots.filter((r) => V.isCx(r)).sort((x, y) => -N.cmp(x.re, y.re) || -N.cmp(x.im, y.im));
-  return [...reals, ...cplx];
 }
 
 /** Real roots with multiplicity information, used by Inequality mode. */

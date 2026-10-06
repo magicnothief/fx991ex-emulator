@@ -9,6 +9,7 @@ import { GridScreen } from '../screens/grid.js';
 import { Menu, Message, page, item, closeMenus } from '../screens/common.js';
 import { commonOptnPage } from '../screens/menus.js';
 import { ParamScreen, ListScreen } from '../screens/params.js';
+import { t } from '../i18n.js';
 
 const statTok = (screen, id, label = id) => item(label, (calc) => { closeMenus(calc); screen.apply(`tok:stat|${id}|${label}`); });
 const tokItem = (screen, label, id) => item(label, (calc) => { closeMenus(calc); screen.apply(`tok:${id}`); });
@@ -96,7 +97,7 @@ const STAT_LABELS = {
 function showSummary(calc) {
   const s = calc.modeData.stats();
   if (!s || s.rows.length === 0) { calc.push(new Message(calc, ['No Data'])); return; }
-  calc.push(new ListScreen(calc, s.summaryIds().map((id) => ({ label: STAT_LABELS[id], value: () => s.value(id) }))));
+  calc.push(new ListScreen(calc, s.summaryIds().map((id) => ({ label: STAT_LABELS[id], value: () => s.value(id) })), { dense: true }));
 }
 
 function showRegression(calc) {
@@ -104,7 +105,7 @@ function showRegression(calc) {
   if (!s || s.rows.length === 0) { calc.push(new Message(calc, ['No Data'])); return; }
   const t = STAT_TYPES.find((x) => x.id === calc.modeData.type);
   const ids = calc.modeData.type === 'quad' ? ['a', 'b', 'c'] : ['a', 'b', 'r'];
-  calc.push(new ListScreen(calc, ids.map((id) => ({ label: `   ${id}`, value: () => s.value(id) })), { title: t.label }));
+  calc.push(new ListScreen(calc, ids.map((id) => ({ label: `   ${id}`, value: () => s.value(id) })), { title: t.label, dense: true }));
 }
 
 function statCalcOptn(calc, s) {
@@ -223,6 +224,7 @@ function distParams(calc) {
   return new ParamScreen(calc, {
     title: t.label,
     params: keys.map((k) => ({ key: k, label: k })),
+    ctx: 'dist',
     values: md.values,
     onOptn: () => calc.push(new Menu(calc, [page([item('Select Type', () => { closeMenus(calc); calc.push(distTypeMenu(calc)); })])])),
     onAC: () => { if (listMode) calc.pop(); },
@@ -233,6 +235,8 @@ function distParams(calc) {
             try { return toNum(distValue(t, { ...md.values, x })); } catch (e) { if (e instanceof CalcError) return 'ERROR'; throw e; }
           });
           calc.pop();
+          // the list comes back with the cursor on the first row (User's Guide p.32)
+          Object.assign(md.listGrid, { r: 0, c: 0, top: 0 });
           return;
         }
         const r = toNum(distValue(t, md.values));
@@ -248,7 +252,7 @@ function distParams(calc) {
 
 function distList(calc) {
   const md = calc.modeData;
-  return new GridScreen(calc, {
+  md.listGrid = new GridScreen(calc, {
     cols: [{ label: 'x', width: 34 }, { label: md.type.result, width: 28 }],
     rowCount: () => md.list.length,
     growable: true,
@@ -268,6 +272,7 @@ function distList(calc) {
         item('Delete All', () => { closeMenus(calc); md.list = []; md.results = []; grid.r = 0; }),
       ])], { sub: true }))),
     ])])),
-    side: () => h('div', 'side', md.type.label.split(' ').map((w) => h('div', null, w))),
+    side: () => h('div', 'side', t(md.type.label).split(' ').map((w) => h('div', null, w))),
   });
+  return md.listGrid;
 }

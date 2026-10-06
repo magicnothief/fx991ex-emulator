@@ -7,6 +7,7 @@ import * as V from '../../core/values.js';
 import { h, renderNodes, renderModel } from '../../ui/render.js';
 import { ErrorScreen } from './common.js';
 import { LINE_TEMPLATE } from './calcscreen.js';
+import { t } from '../i18n.js';
 
 /**
  * opts: { title, params: [{ key, label }], values: { key: Num }, onEq(), onAC(), onOptn() }
@@ -76,12 +77,12 @@ export class ParamScreen {
   view() {
     const { title, params, values } = this.opts;
     const el = h('div', 'kv');
-    if (title) el.append(h('div', 'row', h('span', 'title', title)));
+    if (title) el.append(h('div', 'row', h('span', 'title', t(title))));
     params.slice(this.top, this.top + this.visible).forEach((p, j) => {
       const idx = this.top + j;
       const sel = idx === this.i;
       const row = h('div', `row${sel ? ' inv' : ''}`);
-      row.append(h('span', null, `${p.label.padEnd(5, ' ')}:`));
+      row.append(h('span', null, `${t(p.label, this.opts.ctx).padEnd(5, ' ')}:`));
       const val = h('span', 'v');
       if (sel && this.editor) {
         val.append(renderNodes(this.editor.root, { math: false, cursor: this.editor.cursor(), cursorState: {} }));
@@ -100,17 +101,21 @@ export class ParamScreen {
 
 /** A scrollable list of "label = value" rows. rows: [{ label, value }] */
 export class ListScreen {
-  constructor(calc, rows, { title = null, onClose = null, onEq = null } = {}) {
+  /** dense: small font with six rows per screen, as the statistics result lists use */
+  constructor(calc, rows, { title = null, onClose = null, onEq = null, dense = false } = {}) {
     this.calc = calc;
     this.rows = rows;
     this.title = title;
     this.top = 0;
     this.onClose = onClose;
     this.onEq = onEq;
+    this.dense = dense;
   }
 
+  get visible() { return (this.dense ? 6 : 4) - (this.title ? 1 : 0); }
+
   handle(ev) {
-    const vis = this.title ? 3 : 4;
+    const vis = this.visible;
     switch (ev.action) {
       case 'up': this.top = Math.max(0, this.top - 1); break;
       case 'down': this.top = Math.min(Math.max(0, this.rows.length - vis), this.top + 1); break;
@@ -122,9 +127,9 @@ export class ListScreen {
   }
 
   view() {
-    const vis = this.title ? 3 : 4;
-    const el = h('div', 'kv');
-    if (this.title) el.append(h('div', 'row', this.title));
+    const vis = this.visible;
+    const el = h('div', `kv${this.dense ? ' dense' : ''}`);
+    if (this.title) el.append(h('div', 'row', t(this.title)));
     for (const r of this.rows.slice(this.top, this.top + vis)) {
       let v;
       try {
@@ -134,7 +139,7 @@ export class ListScreen {
         v = null;
       }
       const val = v == null ? 'ERROR' : typeof v === 'string' ? v : renderModel(this.calc.model(v, { form: 'dec' }), { line: true });
-      el.append(h('div', 'row', h('span', null, r.label), h('span', 'v', '=', val)));
+      el.append(h('div', 'row list-row', h('span', 'lbl', r.label), h('span', 'v', '=', val)));
     }
     if (this.rows.length > vis) {
       const bar = h('div', 'scrollbar');

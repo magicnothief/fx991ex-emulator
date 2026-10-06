@@ -7,7 +7,7 @@
     if (n.nodeType === 3) return n.textContent;
     if (n.nodeType !== 1) return '';
     const c = n.classList;
-    if (c.contains('cursor') || c.contains('scrollbar') || c.contains('br')) return '';
+    if ((c.contains('cursor') && !c.contains('under')) || c.contains('scrollbar') || c.contains('br')) return ''; // the overwrite cursor wraps a character
     const kids = () => [...n.childNodes].map(text).join('');
     if (c.contains('m-mixed')) return [...n.childNodes].map(text).join(' ').replace(/\s+/g, ' ').trim();
     if (c.contains('m-frac')) return `${wrap(text(n.children[0]).trim())}/${wrap(text(n.children[1]).trim())}`;

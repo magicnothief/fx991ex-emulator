@@ -1,4 +1,4 @@
-<title>fx-991EX Parity Sheet</title>
+<title>fx-991CE X Parity Sheet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -164,8 +164,8 @@ section.sec { margin-top: 30px; }
 
 <div class="wrap">
   <header class="intro">
-    <h1>fx-991EX Parity Sheet</h1>
-    <p>Run each test on your physical fx-991EX and compare its screen with what the emulator shows. Mark it <b>Same</b> or <b>Differs</b>; for a difference, write what your calculator shows so it can be fixed.</p>
+    <h1>fx-991CE X Parity Sheet</h1>
+    <p>Run each test on your physical fx-991CE X and compare its screen with what the emulator shows. Mark it <b>Same</b> or <b>Differs</b>; for a difference, write what your calculator shows so it can be fixed.</p>
     <ul class="how">
       <li><b>1</b> Before each section: <b>SHIFT 9 3 = AC</b> (RESET → Initialize All), then the section's start keys.</li>
       <li><b>2</b> Press the keys of a test in order, then compare the whole screen.</li>
@@ -205,15 +205,16 @@ const KEYS = {
   FRAC: { f: '▭⁄▭', s: 'mixed ▭⁄▭' }, SQRT: { f: '√▫', s: '∛▫' }, SQR: { f: 'x²', s: 'x³', b: 'DEC' }, POW: { f: 'x▪', s: '▪√▫', b: 'HEX' },
   LOG: { f: 'log▪▫', s: '10▪', b: 'BIN' }, LN: { f: 'ln', s: 'e▪', b: 'OCT' },
   NEG: { f: '(−)', s: 'log', a: 'A', h: 'A' }, DMS: { f: '°’”', s: 'FACT', a: 'B', h: 'B' }, INV: { f: 'x⁻¹', s: 'x!', a: 'C', h: 'C' },
-  SIN: { f: 'sin', s: 'sin⁻¹', a: 'D', h: 'D' }, COS: { f: 'cos', s: 'cos⁻¹', a: 'E', h: 'E' }, TAN: { f: 'tan', s: 'tan⁻¹', a: 'F', h: 'F' },
-  STO: { f: 'STO', s: 'RECALL' }, ENG: { f: 'ENG', s: '←', c: 'i', cs: '∠' }, LP: { f: '(', s: 'Abs' }, RP: { f: ')', s: ',', a: 'x' },
+  SIN: { f: 'sin', s: 'sin⁻¹', a: 'D', h: 'D' }, COS: { f: 'cos', s: 'cos⁻¹', a: 'E', h: 'E' }, TAN: { f: 'tg', s: 'tg⁻¹', a: 'F', h: 'F' },
+  STO: { f: 'STO', s: 'RECALL' }, ENG: { f: 'ENG', s: '←', c: 'i', cs: '∠' }, LP: { f: '(', s: 'Abs' }, RP: { f: ')', s: ';', a: 'x' },
   SD: { f: 'S⇔D', s: 'ab/c⇔d/c', a: 'y' }, MPLUS: { f: 'M+', s: 'M−', a: 'M' },
   DEL: { f: 'DEL', s: 'INS', a: 'UNDO', cls: 'blue' }, AC: { f: 'AC', s: 'OFF', cls: 'blue' },
   MUL: { f: '×', s: 'nPr', cls: 'num' }, DIV: { f: '÷', s: 'nCr', cls: 'num' }, ADD: { f: '+', s: 'Pol', cls: 'num' }, SUB: { f: '−', s: 'Rec', cls: 'num' },
-  DOT: { f: '.', s: 'Ran#', a: 'RanInt', cls: 'num' }, EXP: { f: '×10ˣ', s: 'π', a: 'e', cls: 'num' }, ANS: { f: 'Ans', s: '%', cls: 'num' }, EQ: { f: '=', s: '≈', cls: 'num' },
+  DOT: { f: ',', s: 'Ran#', a: 'RanInt', cls: 'num' }, EXP: { f: '×10ˣ', s: 'π', a: 'e', cls: 'num' }, ANS: { f: 'Ans', s: '%', cls: 'num' }, EQ: { f: '=', s: '≈', cls: 'num' },
   0: { f: '0', s: 'Rnd', cls: 'num' }, 7: { f: '7', s: 'CONST', cls: 'num' }, 8: { f: '8', s: 'CONV', cls: 'num' }, 9: { f: '9', s: 'RESET', cls: 'num' },
 };
-for (const d of '123456') KEYS[d] = { f: d, cls: 'num' };
+for (const d of '12356') KEYS[d] = { f: d, cls: 'num' };
+KEYS[4] = { f: '4', s: 'ATOMIC', cls: 'num' };
 
 /** Keycaps for a key sequence; SHIFT/ALPHA annotate the next key. Base-N and Complex label their own keys. */
 function keycaps(seq, section) {

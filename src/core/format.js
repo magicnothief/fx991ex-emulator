@@ -40,13 +40,10 @@ export function formatDecimal(d, fmt = DEFAULT_FORMAT, opts = {}) {
   }
   if (fmt.mode === 'fix') {
     const r = d.toDecimalPlaces(fmt.digits, Decimal.ROUND_HALF_UP);
-    if (r.abs().gte(1e10)) {
-      const s = d.toSD(10, Decimal.ROUND_HALF_UP);
-      const e = s.e;
-      const m = s.div(new D(10).pow(e)).toFixed(fmt.digits, Decimal.ROUND_HALF_UP);
-      return { t: 'dec', m, e, sym: null };
-    }
-    return { t: 'dec', m: r.toFixed(fmt.digits), e: null, sym: null };
+    // values of 10¹⁰ and more are shown as in Norm 1 (Fix 2: 1×10¹²)
+    if (r.abs().gte(1e10)) return formatDecimal(d, DEFAULT_FORMAT, opts);
+    // Fix 0 still shows the decimal mark (5÷2 → 3,)
+    return { t: 'dec', m: fmt.digits === 0 ? `${r.toFixed(0)}.` : r.toFixed(fmt.digits), e: null, sym: null };
   }
   // Norm 1 / Norm 2: 10 significant digits
   const r = d.toSD(10, Decimal.ROUND_HALF_UP);
@@ -113,6 +110,20 @@ function surdModel(t) {
   let neg = false;
   if (terms.length === 1 && terms[0].s === '-') { neg = true; terms[0].s = '+'; }
   return { t: 'surd', neg, terms, den: den === 1n ? null : den.toString() };
+}
+
+/**
+ * a+bi over a common denominator, as the calculator shows exact complex results: (−1+√3i)/2.
+ * Returns null when there is no shared denominator or a part is not an exact √ form.
+ */
+export function complexFractionModel(re, im) {
+  const tr = re.x && re.x.k === 's' ? re.x.t : null;
+  const ti = im.x && im.x.k === 's' ? im.x.t : null;
+  if (!tr || !ti || ti.length !== 1 || tr.length > 2) return null;
+  const den = [...tr, ...ti].reduce((acc, [, q]) => lcm(acc, q.d), 1n);
+  if (den === 1n) return null;
+  const scale = (t) => t.map(([r, q]) => [r, Q.mul(q, Q.rat(den))]);
+  return { t: 'cfrac', re: tr.length ? surdModel(scale(tr)) : null, im: surdModel(scale(ti)), den: den.toString() };
 }
 
 function piModel(c) {
@@ -246,13 +257,18 @@ export function modelText(m, { decimalMark = '.', digitSep = false } = {}) {
     case 'fact': return [...m.factors.map(([p, e]) => (e > 1 ? `${p}^${e}` : `${p}`)), ...(m.rest > 1n ? [`(${m.rest})`] : [])].join('×');
     case 'cplx': return [m.re ? modelText(m.re) : '', m.im ? `${modelText(m.im)}i` : ''].filter(Boolean).join('+') || '0';
     case 'polar': return `${modelText(m.r)}∠${modelText(m.theta)}`;
+    case 'cfrac': {
+      const im = modelText({ ...m.im, neg: false });
+      return `(${m.re ? modelText(m.re) : ''}${m.im.neg ? '-' : m.re ? '+' : ''}${im === '1' ? '' : im}i)/${m.den}`;
+    }
     default: return '?';
   }
 }
 
 export function groupDigits(s, on, decimalMark = '.') {
   if (!on) return s;
-  const sep = decimalMark === '.' ? ',' : '.';
+  // with a decimal comma the fx-991CE X groups thousands with spaces (9 876 536)
+  const sep = decimalMark === '.' ? ',' : ' ';
   const neg = s.startsWith('-') ? '-' : '';
   const body = neg ? s.slice(1) : s;
   const [ip, fp] = body.split(decimalMark);

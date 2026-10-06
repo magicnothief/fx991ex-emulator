@@ -3,6 +3,7 @@ import { h } from '../../ui/render.js';
 import { Menu, Message, Confirm, DigitPrompt, page, item, closeMenus } from './common.js';
 import { CONSTANT_GROUPS, CONSTANT_PAGES, CONVERSION_GROUPS, CONVERSION_PAGES } from '../../core/constants.js';
 import { MENU_KEY } from '../keymap.js';
+import { t, setLanguage, LANGUAGES } from '../i18n.js';
 
 export const MODE_LIST = [
   { id: 'calc', label: 'Calculate', icon: '×÷\n+−' },
@@ -55,7 +56,7 @@ class MainMenu {
       const idx = firstRow * 4 + j;
       return h('div', `icon${idx === this.sel ? ' sel' : ''}`, h('span', null, m.icon.split('\n').map((l, k) => [k ? h('br') : null, l])), h('span', 'num', MODE_KEYS[idx]));
     });
-    const el = h('div', 'mainmenu', h('div', 'icons', icons), h('div', 'label', `${MODE_KEYS[this.sel]}:${MODE_LIST[this.sel].label}`));
+    const el = h('div', 'mainmenu', h('div', 'icons', icons), h('div', 'label', `${MODE_KEYS[this.sel]}:${t(MODE_LIST[this.sel].label)}`));
     return { el, status: { noMath: true } };
   }
 }
@@ -95,14 +96,15 @@ export function setupMenu(calc) {
       item('Show Cell', () => calc.push(choose(calc, 'sheetShowCell', [['Formula', 'formula'], ['Value', 'value']]))),
     ])], { sub: true }))),
   ]);
+  // fx-991CE X layout (User's Guide HU p.7): no Decimal Mark item; Language on page 4
   const p3 = page([
     item('Equation/Func', sub(() => choose(calc, 'eqComplex', onOff))),
     item('Table', sub(() => choose(calc, 'table', [['f(x)', 'f'], ['f(x),g(x)', 'fg']], (c) => c.notify('table')))),
-    item('Decimal Mark', sub(() => choose(calc, 'decimalMark', [['Dot', 'dot'], ['Comma', 'comma']]))),
     item('Digit Separator', sub(() => choose(calc, 'digitSep', onOff))),
+    item('MultiLine Font', sub(() => choose(calc, 'multiLineFont', [['Normal Font', 'normal'], ['Small Font', 'small']]))),
   ]);
   const p4 = page([
-    item('MultiLine Font', sub(() => choose(calc, 'multiLineFont', [['Normal Font', 'normal'], ['Small Font', 'small']]))),
+    item('Language', sub(() => choose(calc, 'language', LANGUAGES, (c) => setLanguage(c.setup.language)))),
     item('QR Code', sub(() => choose(calc, 'qr', [['Version 3', 3], ['Version 11', 11]]))),
     item('Contrast', () => calc.push(new ContrastScreen(calc))),
   ]);
@@ -121,8 +123,8 @@ class ContrastScreen {
 
   view() {
     const c = this.calc.setup.contrast;
-    const bar = h('div', null, `LIGHT ${'■'.repeat(c)}${'□'.repeat(9 - c)} DARK`);
-    return { el: h('div', 'message', h('div', 'big', 'CONTRAST'), bar, h('div', null, '[◀]  [▶]')) };
+    const bar = h('div', null, `${t('LIGHT')} ${'■'.repeat(c)}${'□'.repeat(9 - c)} ${t('DARK')}`);
+    return { el: h('div', 'message', h('div', 'big', t('CONTRAST')), bar, h('div', null, '[◀]  [▶]')) };
   }
 }
 
@@ -174,7 +176,7 @@ export function convMenu(calc, insert) {
 // ---------------------------------------------------------------- OPTN building blocks
 
 export function hyperbolicMenu(calc, apply) {
-  const fns = [['sinh', 'sinh('], ['cosh', 'cosh('], ['tanh', 'tanh('], ['sinh⁻¹', 'asinh('], ['cosh⁻¹', 'acosh('], ['tanh⁻¹', 'atanh(']];
+  const fns = [['sinh', 'sinh('], ['cosh', 'cosh('], ['tgh', 'tanh('], ['sinh⁻¹', 'asinh('], ['cosh⁻¹', 'acosh('], ['tgh⁻¹', 'atanh(']];
   return new Menu(calc, [page(fns.map(([l, id]) => item(l, () => { closeMenus(calc); apply(`tok:${id}`); })), { cols: 2 })], { sub: true });
 }
 

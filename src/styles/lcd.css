@@ -159,6 +159,14 @@
 .grid-screen .footer.edit { justify-content: flex-start; }
 .grid-screen .side { position: absolute; right: calc(var(--lp) * 1); top: 0; font: 600 calc(var(--lp) * 9)/1.15 "Consolas", monospace; text-align: right; }
 
+.ptable-screen { position: absolute; inset: 0; }
+.ptable { position: absolute; left: calc(var(--lp) * 2); top: calc(var(--lp) * 2); display: grid; grid-template-columns: repeat(18, calc(var(--lp) * 6.4)); grid-template-rows: repeat(10, calc(var(--lp) * 5)); }
+.pt-cell { width: 100%; height: 100%; }
+.pt-cell.on { border: calc(var(--lp) * .5) solid var(--ink); margin: 0 calc(var(--lp) * -.25) calc(var(--lp) * -.25) 0; }
+.pt-cell.sel { background: var(--ink); }
+.pt-info { position: absolute; right: calc(var(--lp) * 3); top: calc(var(--lp) * 10); text-align: right; font-family: var(--math-font); }
+.pt-z, .pt-sym { font-size: calc(var(--lp) * 11); line-height: 1.1; }
+.pt-w { font-size: calc(var(--lp) * 7.5); margin-top: calc(var(--lp) * 3); }
 .mat-title { position: absolute; left: calc(var(--lp) * 2); top: 0; font-size: calc(var(--lp) * 7.5); }
 .grid-screen .matrix { position: absolute; left: calc(var(--lp) * 14); top: calc(var(--lp) * 8); }
 .grid-screen .matrix td { height: calc(var(--lp) * 9.5); font-size: calc(var(--lp) * 8.5); text-align: right; padding: 0 calc(var(--lp) * 2); }
@@ -176,3 +184,12 @@
 .kv .row .v { font-family: var(--math-font); display: inline-flex; align-items: center; }
 .kv.small { font-size: calc(var(--lp) * 8.4); line-height: calc(var(--lp) * 11); }
 .kv.small .row { height: calc(var(--lp) * 11); }
+.kv.dense { font-size: calc(var(--lp) * 7.6); line-height: calc(var(--lp) * 9); }
+.kv.dense .row { height: calc(var(--lp) * 9); }
+.kv .list-row { justify-content: flex-start; }
+.kv .list-row .lbl { min-width: calc(var(--lp) * 28); }
+.cursor.under { display: inline; width: auto; height: auto; margin: 0; background: none; border-bottom: calc(var(--lp) * 1) solid var(--ink); }
+.cursor.under.blink-off { visibility: visible; border-bottom-color: transparent; }
+.ratio-line { position: absolute; left: calc(var(--lp) * 2); top: calc(var(--lp) * 12); display: flex; align-items: baseline; gap: calc(var(--lp) * 1.5); font: 600 calc(var(--lp) * 9)/1 "Consolas", monospace; }
+.ratio-line .f { min-width: calc(var(--lp) * 26); text-align: right; border-bottom: calc(var(--lp) * .6) solid var(--ink); }
+.ratio-line .f.sel { background: var(--ink); color: var(--glass); }
