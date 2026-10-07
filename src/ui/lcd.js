@@ -202,14 +202,29 @@ export function textWidth(text, font = 'L') {
   return chars(text).length * (FONTS[font] ?? FONTS.L).pitch;
 }
 
-/** Paints the buffer onto a canvas as LCD dots. */
+/**
+ * Paints the buffer onto a canvas as solid pixels. The canvas is sized to the device pixels it covers and
+ * each LCD pixel fills its whole cell, so neighbouring pixels join without gaps (as on the real display).
+ */
 export function present(lcd, canvas, ink = 'rgba(20, 22, 18, 0.92)') {
-  const k = canvas.width / WIDTH;
+  const r = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.max(WIDTH, Math.round(r.width * dpr));
+  const H = Math.max(HEIGHT, Math.round(r.height * dpr));
+  if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = ink;
-  const dot = Math.max(1, k - Math.max(1, Math.round(k * 0.12)));
+  const xs = (x) => Math.round((x * W) / WIDTH);
+  const ys = (y) => Math.round((y * H) / HEIGHT);
   for (let y = 0; y < HEIGHT; y++) {
-    for (let x = 0; x < WIDTH; x++) if (lcd.bits[y * WIDTH + x]) ctx.fillRect(x * k, y * k, dot, dot);
+    const y0 = ys(y), h = ys(y + 1) - y0;
+    for (let x = 0; x < WIDTH; x++) {
+      if (!lcd.bits[y * WIDTH + x]) continue;
+      let e = x;
+      while (e + 1 < WIDTH && lcd.bits[y * WIDTH + e + 1]) e++;
+      ctx.fillRect(xs(x), y0, xs(e + 1) - xs(x), h);
+      x = e;
+    }
   }
 }

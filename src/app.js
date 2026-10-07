@@ -68,7 +68,7 @@ function fit() {
   const z = Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H);
   document.getElementById('calc').style.zoom = String(z);
 }
-window.addEventListener('resize', fit);
+window.addEventListener('resize', () => { fit(); render(); }); // redraw the LCD at the new pixel size
 fit();
 render();
 
