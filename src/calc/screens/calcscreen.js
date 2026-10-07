@@ -431,6 +431,7 @@ export class CalcScreen {
 
   /** Pixel display: input from the top-left, result right-aligned on the bottom line (rows 49–61). */
   paint(lcd) {
+    if (this.calc.mode === 'base') return this.paintBase(lcd);
     const math = this.math;
     const cursorState = { overwrite: !math && this.editor.overwrite, block: this.editor.remaining() <= 10 };
     const cursor = this.phase === 'input' ? this.editor.cursor() : null;
@@ -448,6 +449,37 @@ export class CalcScreen {
     }
     if (this.phase === 'result' && this.result) this.paintResult(lcd);
     return {
+      disp: this.phase === 'result' && this.stmts && this.stmtIdx < this.stmts.length - 1,
+      up: this.history.length > 0 && (this.hist < 0 ? this.history.length > (this.phase === 'result' ? 1 : 0) : this.hist > 0),
+      down: this.hist >= 0 && this.hist < this.history.length - 1,
+      sto: this.stoPending,
+    };
+  }
+
+  /**
+   * Base-N (User's Guide, BIN example): the active base "[Bin]" on the first line, the input on the second,
+   * the result right-aligned on the third (BIN: 32 bits on the third and fourth lines, in groups of four).
+   */
+  paintBase(lcd) {
+    const base = this.calc.modeData.base || 'dec';
+    lcd.text(`[${BASE_NAMES[base]}]`, 0, 12);
+    const cursor = this.phase === 'input' ? this.editor.cursor() : null;
+    const expr = editorBox(this.editor.root, { math: false, cursor, cursorState: { overwrite: this.editor.overwrite, block: this.editor.remaining() <= 10 } });
+    drawBox(lcd, expr, Math.min(0, 191 - expr.w), 26);
+    if (this.phase === 'result' && this.result) {
+      const { value } = this.result;
+      if (value.pair || V.isMat(value) || V.isVec(value) || V.isCx(value)) this.paintResult(lcd);
+      else {
+        baseLines(value, base).forEach((l, i) => {
+          if (base !== 'bin') { lcd.textRight(l, 192, 40); return; }
+          // four groups of four digits, 5 px between the groups (fills the 192-pixel line)
+          for (let gI = 0; gI < 4; gI++) lcd.text(l.slice(gI * 4, gI * 4 + 4), 2 + gI * 49, 40 + i * 14, { log: false });
+          lcd.note(l.replace(/(.{4})(?=.)/g, '$1 '), 0, 40 + i * 14);
+        });
+      }
+    }
+    return {
+      noMath: true,
       disp: this.phase === 'result' && this.stmts && this.stmtIdx < this.stmts.length - 1,
       up: this.history.length > 0 && (this.hist < 0 ? this.history.length > (this.phase === 'result' ? 1 : 0) : this.hist > 0),
       down: this.hist >= 0 && this.hist < this.history.length - 1,
@@ -564,6 +596,8 @@ function glyphIndex(nodes, idx) {
   for (let i = 0; i < idx; i++) n += chars(tokenInfo(nodes[i].id).text).length;
   return n;
 }
+
+const BASE_NAMES = { dec: 'Dec', hex: 'Hex', bin: 'Bin', oct: 'Oct' };
 
 function baseLines(value, base) {
   const n = BigInt(value.d.toFixed(0));

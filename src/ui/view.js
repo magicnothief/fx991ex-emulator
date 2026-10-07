@@ -46,7 +46,7 @@ function paintStatus(lcd, calc, st) {
   if (m && !(V.isReal(m) && N.isZero(m))) lcd.icon('M');
   if (st.sto) lcd.icon('STO');
   if ((s.io === 'mm' || s.io === 'md') && !st.noMath) lcd.icon('math');
-  lcd.icon({ deg: 'D', rad: 'R', gra: 'G' }[s.angle]);
+  if (calc.mode !== 'base') lcd.icon({ deg: 'D', rad: 'R', gra: 'G' }[s.angle]); // Base-N shows no angle unit
   if (s.numFormat.mode === 'fix') lcd.icon('FIX');
   if (s.numFormat.mode === 'sci') lcd.icon('SCI');
   if (s.engSymbol) lcd.icon('eng');

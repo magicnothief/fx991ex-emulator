@@ -39,8 +39,8 @@ const HU = {
   'Number of Rows?': 'Sorok száma?', //?
   'Number of Columns?': 'Oszlopok száma?', //?
   'Dimension?': 'Dimenzió?', //?
-  'Select 1~4': 'Válasszon: 1~4', //?
-  'Select 2~3': 'Válasszon: 2~3', //?
+  'Select 1~4': '1~4 választ', // like the confirmed '2~4 választ'
+  'Select 2~3': '2~3 választ',
   'Select 2~4': '2~4 választ',
   // statistics and distribution
   'Select Type': 'Típus választás', '1-Variable': '1 változós', Editor: 'Szerkesztő', 'Insert Row': 'Sor beilleszt',

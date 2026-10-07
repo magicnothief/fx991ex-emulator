@@ -45,5 +45,11 @@ labels = ['1:in▸cm', '2:cm▸in', '3:ft▸m', '4:m▸ft', '5:yd▸m', '6:m▸y
 lines = [9, 19, 29, 39, 49, 59]
 harvest(conv, 'S', 6, 8, 2, [((i % 2) * 96, lines[i // 2], l) for i, l in enumerate(labels)])
 
+# Matrix and vector editors (User's Guide p.27, p.30): titles in the tiny font
+harvest(manual('cex.pdf', 26, 1), 'T', 6, 6, 1, [(0, 7, 'MatA=')])
+harvest(manual('cex.pdf', 29, 0), 'T', 6, 6, 1, [(0, 7, 'VctA=')])
+harvest(manual('cex.pdf', 27, 0), 'T', 6, 6, 1, [(0, 7, 'MatAns=')])
+harvest(manual('cex.pdf', 29, 1), 'T', 6, 6, 1, [(0, 7, 'VctAns=')])
+
 json.dump(H, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
 print({f: len(g) for f, g in H.items()})

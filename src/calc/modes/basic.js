@@ -140,8 +140,10 @@ function arrayMode(kind) {
     }
   }
 
-  const sizeOf = (v) => (!v ? '' : isMat ? ` ${v.r}×${v.c}` : ` ${v.n}`);
-  const pickMenu = (calc, fn, sub = true) => new Menu(calc, [page(NAMES.map((n) => item(`${prefix}${n}${sizeOf(store(calc)[n])}`, () => fn(n))))], { sub });
+  // "Define Matrix" / "Edit Matrix": the title, then "1:MatA   2:MatB" and "3:MatC   4:MatD" (ClassWiz screenshots)
+  const pickMenu = (calc, fn, sub = true, title = 'Define') => new Menu(calc,
+    [page(NAMES.map((n) => item(`${prefix}${n}`, () => fn(n))), { pairFrom: 0 })],
+    { sub, title: `${title} ${isMat ? 'Matrix' : 'Vector'}` });
 
   return {
     start(calc) {
@@ -153,9 +155,9 @@ function arrayMode(kind) {
               closeMenus(calc);
               if (store(calc)[n]) calc.push(editor(calc, n));
               else define(calc, n);
-            }))),
+            }, true, 'Edit'))),
             ...NAMES.map((n) => tokItem(s, `${prefix}${n}`, `${prefix}${n}`)),
-          ], { cols: 2, small: true }),
+          ], { pairFrom: 2 }), // "1:Define Matrix", "2:Edit Matrix", then "3:MatA   4:MatB", "5:MatC   6:MatD"
           isMat
             ? page([tokItem(s, 'MatAns', 'MatAns'), tokItem(s, 'Determinant', 'Det('), tokItem(s, 'Transposition', 'Trn('), tokItem(s, 'Identity', 'Identity(')])
             : page([tokItem(s, 'VctAns', 'VctAns'), tokItem(s, 'Dot Product', '•'), tokItem(s, 'Angle', 'Angle('), tokItem(s, 'Unit Vector', 'UnitV(')]),

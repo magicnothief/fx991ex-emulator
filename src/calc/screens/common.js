@@ -79,19 +79,30 @@ export class Menu {
     return { el, status: { sub: this.sub } };
   }
 
-  /** Main-font menus: four lines (pitch 16); small-font pages: six lines (pitch 10) in 1–3 columns. */
+  /**
+   * Main-font menus: four lines (pitch 16), two items on a line from page.pairFrom on (second item at the
+   * tenth cell, as "3:MatA   4:MatB"); small-font pages: six lines (pitch 10) in 1–3 columns.
+   */
   paint(lcd) {
     const page = this.pages[this.page];
     const cols = page.cols || 1;
-    const small = page.small || Math.ceil(page.items.length / cols) + (this.title ? 1 : 0) > 4;
+    const pairFrom = page.pairFrom ?? (cols === 2 && !page.small ? 0 : null);
+    const lineCount = pairFrom != null ? pairFrom + Math.ceil((page.items.length - pairFrom) / 2) : Math.ceil(page.items.length / cols);
+    const small = page.small || lineCount + (this.title ? 1 : 0) > 4;
     const font = small ? 'S' : 'L';
     const lines = small ? SMALL_LINES : LINES;
-    const colW = Math.floor(192 / cols);
     let line = 0;
     if (this.title) lcd.text(t(this.title), 0, lines[line++], { font });
     page.items.forEach((it, i) => {
-      const r = line + Math.floor(i / cols), c = i % cols;
-      if (r < lines.length) lcd.text(`${MENU_KEYS[i]}:${t(it.label)}`, c * colW, lines[r], { font });
+      let r, x;
+      if (pairFrom != null && !small) {
+        r = i < pairFrom ? i : pairFrom + Math.floor((i - pairFrom) / 2);
+        x = i >= pairFrom && (i - pairFrom) % 2 ? 99 : 0;
+      } else {
+        r = Math.floor(i / cols);
+        x = (i % cols) * Math.floor(192 / cols);
+      }
+      if (line + r < lines.length) lcd.text(`${MENU_KEYS[i]}:${t(it.label)}`, x, lines[line + r], { font });
     });
     scrollbar(lcd, this.page, this.pages.length);
     return { sub: this.sub };

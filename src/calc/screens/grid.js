@@ -181,12 +181,12 @@ export class GridScreen {
     return { noMath: !this.editor, up: this.top > 0, down: this.top + vis < this.rows };
   }
 
-  /** Bottom line: the input being typed (left), or the full value of the selected cell (right). */
+  /** Bottom line (baseline 60 on grid screens): the input being typed (left), or the selected cell's value (right). */
   paintFooter(lcd) {
     const spec = this.spec;
     if (this.editor) {
       const b = editorBox(this.editor.root, { math: this.editor.math, cursor: this.editor.cursor(), cursorState: {} });
-      drawBox(lcd, b, Math.min(0, 191 - b.w), Math.min(61, 62 - b.desc));
+      drawBox(lcd, b, Math.min(0, 191 - b.w), Math.min(60, 61 - b.desc));
       return;
     }
     const v = this.r < spec.rowCount() ? spec.get(this.r, this.c) : null;
@@ -195,34 +195,35 @@ export class GridScreen {
     if (custom) b = textBox(custom.textContent ?? String(custom));
     else if (v && typeof v !== 'string') b = modelBox(this.calc.model(v, {}), { digitSep: this.calc.setup.digitSep });
     else if (typeof v === 'string') b = textBox(v);
-    if (b) drawBox(lcd, b, Math.max(0, 192 - b.w), Math.min(61, 62 - b.desc));
+    if (b) drawBox(lcd, b, Math.max(0, 192 - b.w), Math.min(60, 61 - b.desc));
   }
 
-  /** Matrix and vector editors: the title, then the cells between brackets, the value at the bottom. */
+  /**
+   * Matrix and vector editors as in the User's Guide: "MatA=" in the tiny font, cells on a 10-row pitch in
+   * 42-px columns between 2-px brackets with serifs, the selected cell inverted, the value at the bottom.
+   */
   paintMatrix(lcd) {
     const spec = this.spec;
-    lcd.text(spec.title, 0, 8, { font: 'S' });
+    lcd.text(spec.title, 0, 7, { font: 'T' });
     const cols = spec.cols.length;
-    const colW = cols > 3 ? 40 : 44;
-    const x0 = 10;
-    const vis = spec.visibleRows;
-    const shown = Math.min(vis, this.rows);
-    const top = 12, bot = top + shown * 10 + 1;
-    lcd.vline(x0 - 4, top, bot); lcd.hline(x0 - 4, x0 - 2, top); lcd.hline(x0 - 4, x0 - 2, bot);
-    const xr = x0 + cols * colW + 2;
-    lcd.vline(xr, top, bot); lcd.hline(xr - 2, xr, top); lcd.hline(xr - 2, xr, bot);
+    const shown = Math.min(spec.visibleRows, this.rows);
+    const top = 10, bot = 16 + (shown - 1) * 10 + 1;
+    const right = 57 + 42 * (cols - 1) + 5; // right bracket
+    for (const [x, serif] of [[17, 17], [right, right - 2]]) {
+      lcd.fill(x, top, 2, bot - top + 1);
+      lcd.fill(serif, top, 4, 2);
+      lcd.fill(serif, bot - 1, 4, 2);
+    }
     for (let i = 0; i < shown; i++) {
       const r = this.top + i;
-      const base = top + 9 + i * 10;
+      const base = 16 + i * 10;
       spec.cols.forEach((col, c) => {
-        const cx = x0 + c * colW;
-        const text = cellText(spec.get(r, c), CELL_CHARS);
-        lcd.textRight(text, cx + colW - 2, base, { font: 'T' });
-        if (r === this.r && c === this.c) lcd.invert(cx, base - 8, colW - 1, 10);
+        lcd.textRight(cellText(spec.get(r, c), CELL_CHARS), 58 + 42 * c, base, { font: 'T' });
+        if (r === this.r && c === this.c) lcd.invert(22 + 42 * c, base - 6, 36, 8);
       });
     }
     this.paintFooter(lcd);
-    return { noMath: !this.editor, up: this.top > 0, down: this.top + vis < this.rows };
+    return { noMath: !this.editor, up: this.top > 0, down: this.top + spec.visibleRows < this.rows };
   }
 
   /** Bracketed layout used by the Matrix and Vector editors ("MatA=" followed by the matrix). */
