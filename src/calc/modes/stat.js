@@ -97,7 +97,8 @@ const STAT_LABELS = {
 function showSummary(calc) {
   const s = calc.modeData.stats();
   if (!s || s.rows.length === 0) { calc.push(new Message(calc, ['No Data'])); return; }
-  calc.push(new ListScreen(calc, s.summaryIds().map((id) => ({ label: STAT_LABELS[id], value: () => s.value(id) })), { dense: true }));
+  // User's Guide p.23: labels from x 36, "=" at x 78
+  calc.push(new ListScreen(calc, s.summaryIds().map((id) => ({ label: STAT_LABELS[id], value: () => s.value(id) })), { dense: true, at: { x: 36, eq: 78 } }));
 }
 
 function showRegression(calc) {
@@ -105,7 +106,8 @@ function showRegression(calc) {
   if (!s || s.rows.length === 0) { calc.push(new Message(calc, ['No Data'])); return; }
   const t = STAT_TYPES.find((x) => x.id === calc.modeData.type);
   const ids = calc.modeData.type === 'quad' ? ['a', 'b', 'c'] : ['a', 'b', 'r'];
-  calc.push(new ListScreen(calc, ids.map((id) => ({ label: `   ${id}`, value: () => s.value(id) })), { title: t.label, dense: true }));
+  // User's Guide p.23: the model from x 36, coefficients as "a=" with "=" at x 72
+  calc.push(new ListScreen(calc, ids.map((id) => ({ label: id, value: () => s.value(id) })), { title: t.label, dense: true, at: { x: 36, label: 66, eq: 72 } }));
 }
 
 function statCalcOptn(calc, s) {

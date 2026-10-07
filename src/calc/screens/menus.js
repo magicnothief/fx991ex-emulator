@@ -174,17 +174,15 @@ export function qrScreen(calc) {
 
 // ---------------------------------------------------------------- CONST / CONV
 
+// CONST and CONV lists are small-font pages whatever their length ("_" starts a label's subscripts: R_K-90)
 function itemsPage(items, insert, calc, idOf, cols) {
-  return page(items.map((it) => item(it.label.replace(/_/g, ''), () => { closeMenus(calc); insert(idOf(it)); })), {
-    cols,
-    small: items.length > 4,
-  });
+  return page(items.map((it) => item(it.label, () => { closeMenus(calc); insert(idOf(it)); })), { cols, small: true });
 }
 
 export function constMenu(calc, insert) {
   const pages = CONSTANT_PAGES.map((idxs) => page(idxs.map((gi) => {
     const g = CONSTANT_GROUPS[gi];
-    return item(g.name, () => calc.push(new Menu(calc, [itemsPage(g.items, insert, calc, (it) => `tok:const|${it.id}|${it.label.replace(/_/g, '')}`, 3)], { sub: true })));
+    return item(g.name, () => calc.push(new Menu(calc, [itemsPage(g.items, insert, calc, (it) => `tok:const|${it.id}|${it.label}`, 3)], { sub: true })));
   })));
   return new Menu(calc, pages);
 }
@@ -214,11 +212,10 @@ export function engSymbolMenu(calc, apply) {
 }
 
 /** The OPTN page common to calculation screens. */
-export function commonOptnPage(calc, apply, { eng = true } = {}) {
-  const items = [
+export function commonOptnPage(calc, apply) {
+  return page([
     item('Hyperbolic Func', () => calc.push(hyperbolicMenu(calc, apply))),
     item('Angle Unit', () => calc.push(angleUnitMenu(calc, apply))),
-  ];
-  if (eng) items.push(item('Engineer Symbol', () => calc.push(engSymbolMenu(calc, apply))));
-  return page(items);
+    item('Engineer Symbol', () => calc.push(engSymbolMenu(calc, apply))), // in every mode's OPTN (fx-991CE X)
+  ]);
 }

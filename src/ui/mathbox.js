@@ -1,15 +1,17 @@
 // Natural Textbook Display on the pixel LCD: lays out editor trees and results as boxes and draws them.
 // A box is { w, asc, desc, draw(lcd, x, base), text }: asc rows above and desc rows below the baseline row.
 // Layout rules measured from the fx-991CE X User's Guide screenshots (4⁄5+2⁄3, (1+√2)⁄√2, 7⁄10 …).
-import { glyph, chars } from './lcd.js';
+import { glyph, chars, textWidth } from './lcd.js';
 import { FONTS } from './lcdfont.js';
 import { tokenInfo } from '../core/tokens.js';
 import { groupDigits } from '../core/format.js';
 
 // main style (L font) and the small style of exponents, limits and indices (S font)
+// axis: fraction bar above the baseline; numGap/denGap: rows from the bar to the numerator box bottom
+// (exclusive) and to the denominator top (fx-991CE X User's Guide: 4⁄5+2⁄3, (1+√2)⁄√2)
 const STYLE = {
-  L: { font: 'L', pitch: 11, asc: 11, desc: 1, axis: 7, raise: 7 },
-  S: { font: 'S', pitch: 6, asc: 8, desc: 2, axis: 4, raise: 4 },
+  L: { font: 'L', pitch: 11, asc: 11, desc: 1, axis: 5, raise: 7, numGap: 2, denGap: 3 },
+  S: { font: 'S', pitch: 6, asc: 8, desc: 2, axis: 4, raise: 4, numGap: 0, denGap: 2 },
 };
 const smaller = () => STYLE.S;
 
@@ -18,8 +20,10 @@ const box = (w, asc, desc, draw, text = '') => ({ w, asc, desc, draw, text });
 /** A run of glyphs in one style. */
 export function textBox(str, st = STYLE.L, font = st.font) {
   const cs = chars(str);
-  return box(cs.length * st.pitch, st.asc, st.desc, (lcd, x, base) => {
-    for (const c of cs) { lcd.glyph(c, x, base, font); x += st.pitch; }
+  // main-font subscripts (constants such as c₀, μ_N) reach 3 rows below the baseline
+  const desc = font === 'L' && cs.some((c) => /^_.|^[₀-₉ₚ]$/.test(c)) ? 3 : st.desc;
+  return box(textWidth(str, font), st.asc, desc, (lcd, x, base) => {
+    for (const c of cs) x += lcd.glyph(c, x, base, font);
   }, String(str));
 }
 
@@ -36,20 +40,20 @@ export function row(items) {
 }
 
 /**
- * Fraction: 1-pixel bar 7 rows above the baseline, from 2 px before to 1 px after the wider part. When the
- * numerator or denominator holds a fraction itself, the main bar reaches 2 px further on each side, so it is
- * clearly the longest (stacked fractions).
+ * Fraction as in the User's Guide (4⁄5: numerator rows 1–12, bar on row 15, denominator rows 18–29): the bar
+ * 5 rows above the baseline with two blank rows on each side, running from 1 px into the box to its end; the
+ * parts start 2 px in. When the numerator or denominator holds a fraction itself, the main bar reaches 2 px
+ * further on each side, so it is clearly the longest (stacked fractions).
  */
 export function frac(num, den, st = STYLE.L) {
   const inner = Math.max(num.w, den.w);
   const pad = num.bars || den.bars ? 2 : 0;
-  const w = inner + 3 + 2 * pad;
+  const w = inner + 4 + 2 * pad;
   const bar = -st.axis;
-  // one blank row on each side of the bar (the style's own descender rows do not count)
-  const numBase = bar - 2 - Math.max(0, num.desc - st.desc);
-  const denBase = bar + 2 + den.asc;
+  const numBase = bar - st.numGap - num.desc;
+  const denBase = bar + st.denGap + den.asc;
   const b = box(w, -(numBase - num.asc), denBase + den.desc, (lcd, x, base) => {
-    lcd.hline(x, x + w - 1, base + bar);
+    lcd.hline(x + 1, x + w - 1, base + bar);
     num.draw(lcd, x + 2 + pad + Math.floor((inner - num.w) / 2), base + numBase);
     den.draw(lcd, x + 2 + pad + Math.floor((inner - den.w) / 2), base + denBase);
   }, `(${num.text})/(${den.text})`);
@@ -69,26 +73,26 @@ export function lowered(sub) {
 }
 
 /**
- * Radical as on the calculator: a tick and diagonal ending one row below the radicand's baseline, a stroke
- * up to an overline 3 rows above the radicand, overline running 1 px past it. 8 px in front of the radicand.
+ * Radical as in the User's Guide ((1+√2)⁄√2): 12 px before the radicand and 2 px after it; a
+ * tick and diagonal ending one row below the radicand's baseline, a stroke up to an overline 3 rows above
+ * the radicand that ends on the radicand's last column.
  */
 export function radical(rad, index = null) {
-  const lead = Math.max(11, index ? index.w + 6 : 0); // one main-font cell before the radicand
-  const w = lead + rad.w + 1;
+  const lead = Math.max(12, index ? index.w + 7 : 0);
+  const w = lead + rad.w + 2;
   const r = box(w, rad.asc + 3, Math.max(rad.desc, 1), (lcd, x, base) => {
     const c = x + lead; // radicand start
     const top = base - rad.asc; // radicand top row
-    const bot = base + Math.max(rad.desc, 1); // lowest row of the sign
-    const b = bot - 1; // reference baseline for the fixed lower part
-    lcd.hline(c - 3, c + rad.w, top - 3);
-    lcd.vline(c - 3, top - 2, top);
-    lcd.vline(c - 4, top + 1, b);
+    const b = base + Math.max(rad.desc, 1) - 1; // reference baseline for the fixed lower part
+    lcd.hline(c - 4, c + rad.w - 1, top - 3);
+    lcd.vline(c - 4, top - 2, top);
+    lcd.vline(c - 5, top + 1, b - 4);
     // tick and diagonal (fixed shape at the bottom)
-    for (const [dx, dy] of [[-7, -7], [-8, -6], [-7, -6], [-8, -5], [-6, -5], [-6, -4], [-6, -3], [-5, -3], [-6, -2], [-5, -2], [-5, -1], [-5, 0], [-5, 1]]) {
+    for (const [dx, dy] of [[-8, -7], [-9, -6], [-8, -6], [-9, -5], [-7, -5], [-7, -4], [-7, -3], [-6, -3], [-7, -2], [-6, -2], [-6, -1], [-6, 0], [-6, 1]]) {
       lcd.dot(c + dx, b + dy);
     }
-    if (index) index.draw(lcd, c - 5 - index.w, b - 8);
-    rad.draw(lcd, c, base);
+    if (index) index.draw(lcd, c - 6 - index.w, b - 8);
+    rad.draw(lcd, c - 2, base); // the radicand's cells start 2 px before the sign's reference column
   }, `√(${rad.text})`);
   r.bars = rad.bars;
   return r;
@@ -307,7 +311,9 @@ export function modelBox(m, opts = {}, st = STYLE.L) {
     }
     case 'pi': {
       const coef = m.d === '1' ? (m.n === '1' ? null : t(m.n)) : frac(t(m.n), t(m.d), st);
-      return neg(row([coef, t('π')]), m.neg);
+      // after a fraction the π is centred on the fraction bar, 1 row above the baseline
+      const pi = coef?.bars ? box(st.pitch, st.asc + 1, 0, (lcd, x, base) => lcd.glyph('π', x, base - 1, st.font), 'π') : t('π');
+      return neg(row([coef, pi]), m.neg);
     }
     case 'dms': return t(`${m.neg ? '−' : ''}${m.deg}°${m.min}'${num(m.sec)}"`);
     case 'fact': {

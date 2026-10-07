@@ -21,7 +21,9 @@ for line in open(f'{sp}/font/labels.txt', encoding='utf-8'):
         F.setdefault(p[1], {})[p[2]] = {'rows': list(bm), 'bottom': off, 'x': 1 if p[1] != 'L' else None}
 
 L, S, T, E = F['L'], F['S'], F['T'], F['E']
-T['m'] = T.pop('M')  # the tiny "M" sample is a lowercase m (7-row lowercase)
+# the tiny "M" and "ε" samples are the small font's 7-row μ and ε (CONST list), harvested there
+T.pop('M')
+T.pop('ε')
 T['E'] = {'rows': ['#####', '#....', '#....', '####.', '#....', '#....', '#####'], 'x': 1, 'bottom': 0}  # the sample was the boxed ENG indicator
 
 
@@ -79,21 +81,28 @@ L['"'] = g(['##.##', '##.##', '#..#.'], 2, -9)
 L['@'] = g(['..######..', '.##....##.', '##......##', '##..####.#', '##.##..#.#', '##.##..#.#', '##.##..#.#',
             '##..#####.', '##........', '.##.....#.', '..######..'], 0, 0)
 
-# ---------------------------------------------------------------- small font (5×9 capitals, x-height 5)
+# ---------------------------------------------------------------- small font (5×9 capitals, x-height 7)
+# Lowercase fills the 7 rows above the baseline, without descenders: p, y fold their tails inside (CONV,
+# CONST and statistics screens). Fallbacks for letters the harvested screens do not show:
 SMALL = {
-    'g': (['.####', '#...#', '#...#', '#...#', '.####', '....#', '.###.'], 2),
-    'm': (['##.#.', '#.#.#', '#.#.#', '#.#.#', '#.#.#'], 0),
-    'n': (['#.##.', '##..#', '#...#', '#...#', '#...#'], 0),
-    'o': (['.###.', '#...#', '#...#', '#...#', '.###.'], 0),
-    'p': (['####.', '#...#', '#...#', '#...#', '####.', '#....', '#....'], 2),
-    'q': (['.####', '#...#', '#...#', '#...#', '.####', '....#', '....#'], 2),
-    's': (['.####', '#....', '.###.', '....#', '####.'], 0),
-    'u': (['#...#', '#...#', '#...#', '#..##', '.##.#'], 0),
-    'v': (['#...#', '#...#', '#...#', '.#.#.', '..#..'], 0),
-    'w': (['#...#', '#...#', '#.#.#', '#.#.#', '.#.#.'], 0),
-    'x': (['#...#', '.#.#.', '..#..', '.#.#.', '#...#'], 0),
-    'y': (['#...#', '#...#', '#...#', '.####', '....#', '....#', '.###.'], 2),
-    'z': (['#####', '...#.', '..#..', '.#...', '#####'], 0),
+    'g': (['.####', '#...#', '#...#', '.####', '....#', '#...#', '.###.'], 0),
+    'm': (['##.#.', '#.#.#', '#.#.#', '#.#.#', '#.#.#', '#.#.#', '#.#.#'], 0),
+    'n': (['#.##.', '##..#', '#...#', '#...#', '#...#', '#...#', '#...#'], 0),
+    'o': (['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'], 0),
+    'p': (['####.', '#...#', '#...#', '#...#', '##..#', '#.##.', '#....'], 0),
+    'q': (['.####', '#...#', '#...#', '#...#', '#..##', '.##.#', '....#'], 0),
+    's': (['.###.', '#...#', '#....', '.###.', '....#', '#...#', '.###.'], 0),
+    'u': (['#...#', '#...#', '#...#', '#...#', '#...#', '#..##', '.##.#'], 0),
+    'v': (['#...#', '#...#', '#...#', '.#.#.', '.#.#.', '..#..', '..#..'], 0),
+    'w': (['#...#', '#...#', '#...#', '#.#.#', '#.#.#', '#.#.#', '.#.#.'], 0),
+    'x': (['#...#', '#...#', '.#.#.', '..#..', '.#.#.', '#...#', '#...#'], 0),
+    'y': (['#...#', '#...#', '.#.#.', '.#.#.', '..#..', '..#..', '##...'], 0),
+    'z': (['#####', '....#', '...#.', '..#..', '.#...', '#....', '#####'], 0),
+    'α': (['.##.#', '#..##', '#..#.', '#..#.', '#..#.', '#..##', '.##.#'], 0),
+    'γ': (['#...#', '#...#', '.#.#.', '.#.#.', '..#..', '.#.#.', '..#..'], 0),
+    'τ': (['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '...##'], 0),
+    '∞': (['.#.#.', '#.#.#', '#.#.#', '.#.#.'], -2),
+    'Φ': (['..#..', '.###.', '#.#.#', '#.#.#', '#.#.#', '#.#.#', '#.#.#', '.###.', '..#..'], 0),
     'H': (['#...#'] * 4 + ['#####'] + ['#...#'] * 4, 0),
     'J': (['..###'] + ['...#.'] * 5 + ['#..#.', '#..#.', '.##..'], 0),
     'L': (['#....'] * 8 + ['#####'], 0),
@@ -106,14 +115,10 @@ SMALL = {
     'X': (['#...#', '#...#', '.#.#.', '.#.#.', '..#..', '.#.#.', '.#.#.', '#...#', '#...#'], 0),
     'Y': (['#...#', '#...#', '.#.#.', '.#.#.'] + ['..#..'] * 5, 0),
     'Σ': (['#####', '#....', '.#...', '..#..', '...#.', '..#..', '.#...', '#....', '#####'], 0),
-    'σ': (['.####', '#..#.', '#...#', '#...#', '.###.'], 0),
-    'μ': (['#...#', '#...#', '#...#', '#..##', '###.#', '#....', '#....'], 2),
-    'ε': (['.####', '#....', '.###.', '#....', '.####'], 0),
-    'π': (['#####', '.#.#.', '.#.#.', '.#.#.', '.#..#'], 0),
+    'π': (['#####', '.#.#.', '.#.#.', '.#.#.', '.#.#.', '.#.#.', '.#..#'], 0),
     'θ': (['.###.'] + ['#...#'] * 3 + ['#####'] + ['#...#'] * 3 + ['.###.'], 0),
     'λ': (['#....', '.#...', '.#...', '..#..', '..#..', '.#.#.', '.#.#.', '#...#', '#...#'], 0),
-    'x̄': (['#####', '.....', '#...#', '.#.#.', '..#..', '.#.#.', '#...#'], 0),
-    'ȳ': (['#####', '.....', '#...#', '#...#', '#...#', '.####', '....#', '....#', '.###.'], 2),
+    'ȳ': (['#####', '#...#', '#...#', '.#.#.', '.#.#.', '..#..', '..#..', '##...'], 0),
     '=': (['#####', '.....', '#####'], -2),
     ':': (['#', '.', '.', '#'], -1),
     '/': (['....#', '....#', '...#.', '...#.', '..#..', '.#...', '.#...', '#....', '#....'], 0),
@@ -142,6 +147,13 @@ for ch, (rows, bottom) in SMALL.items():
     if ch not in S:
         S[ch] = g(rows, 1 if len(rows[0]) >= 4 else 2, bottom)
 
+# ---------------------------------------------------------------- glyphs harvested from known screens
+import os
+F.setdefault('I', {})
+if os.path.exists(f'{sp}/font/harvest.json'):
+    for fname, gl in json.load(open(f'{sp}/font/harvest.json', encoding='utf-8')).items():
+        F[fname].update(gl)
+
 # small-font accented letters: lowercase get the accent two rows above the x-height, capitals are
 # squeezed from 9 to 7 rows under a 2-row accent (as the main font does)
 S_ACC = {'acute': ['..#..', '.#...'], 'uml': ['.#.#.', '.....'], 'dac': ['.#.#.', '#.#..']}
@@ -159,7 +171,7 @@ for ch, base, kind in [('á', 'a', 'acute'), ('é', 'e', 'acute'), ('í', 'i', '
             body = body[2:] if len(body) > 6 else body  # drop the dot of i
             rows = [r[:w].ljust(w, '.') for r in ['.#.', '#..']] + body
         else:
-            rows = acc + ['.' * w] + b['rows']
+            rows = acc + b['rows']  # 2-row accent right above the 7-row letter: 9 rows like the capitals
     else:
         rows = [r[:w].ljust(w, '.') for r in S_CAP_ACC[kind]] + squeeze(b['rows'], 2)
     S[ch] = {'rows': rows, 'x': b['x'], 'bottom': b['bottom']}
@@ -226,20 +238,16 @@ for ch, rows in TINY.items():
         T[ch] = g(rows, 1 if len(rows[0]) >= 4 else 2, bottom)
 S['−'] = g(['#####'], 1, -4)  # the sample was a fraction-bar fragment; a 1-pixel minus like the tiny font
 S.pop('-', None)
-for f in (S, T):
-    f.setdefault('-', f['−'])
-
-# ---------------------------------------------------------------- glyphs harvested from known screens
-import os
-if os.path.exists(f'{sp}/font/harvest.json'):
-    for fname, gl in json.load(open(f'{sp}/font/harvest.json', encoding='utf-8')).items():
-        F[fname].update(gl)
+# the sign of a negative number in small and tiny text is a 3-pixel dash, shorter than the subtraction
+# operator (regression "a=-852,1627746" p.23; table cells "-0,5" p.29)
+S['-'] = g(['###'], 2, -4)
+T['-'] = g(['###'], 2, -3)
 
 # ---------------------------------------------------------------- remove stray pixels
 # Glyphs cut from screenshots can carry a piece of a fraction bar or of the next line under them. A glyph
 # made of one part keeps only its main body (the largest run of non-blank rows).
 import unicodedata
-MULTI = set('ij!?:;="%÷≥≤…¨¸ȳŷx̄•ħ') | {'x̄'}
+MULTI = set('ij𝑖𝑗!?:;="%÷≥≤…¨¸ȳŷx̄•ħ') | {'x̄'}  # glyphs with separate parts (dots, bars)
 
 
 def multi_part(ch):
@@ -265,6 +273,28 @@ for fname in ('L', 'S', 'T', 'E'):
         below = len(rows) - 1 - main[-1]
         gl['rows'] = rows[main[0]:main[-1] + 1]
         gl['bottom'] -= below
+
+# the small font has one middle dot for products (regression models "y=a+b·ln(x)", p.23)
+S['•'] = S['·']
+
+# ---------------------------------------------------------------- index font
+# Raised and lowered characters inside small-font text (σ²x, ×10¹⁰, c₀, μ_N, R_K-90) in 6-pixel cells:
+# digits and capitals 6 rows, lowercase 5, all placed by the screens (subscripts stand on the baseline,
+# superscripts hang from the capital height). Harvested: 0 1 2 p; 3, 8 and e drawn (squeezing loses a
+# stroke); the rest squeezed from the small font as the guides' 0, 1 and p are.
+I = F['I']
+for gl in I.values():
+    gl['bottom'] = 0
+for ch, rows in {'3': ['.###.', '#...#', '..##.', '....#', '#...#', '.###.'],
+                 '8': ['.###.', '#...#', '.###.', '#...#', '#...#', '.###.'],
+                 'e': ['.###.', '#...#', '#####', '#....', '.###.']}.items():
+    I.setdefault(ch, g(rows))
+for ch, gl in S.items():
+    n = len(gl['rows'])
+    if ch not in I and len(ch) == 1 and ch.isalnum() and gl['bottom'] == 0 and n in (7, 9):
+        I[ch] = {'rows': squeeze(gl['rows'], 3 if n == 9 else 2), 'x': gl['x'], 'bottom': 0}
+I['−'] = g(['#####'], 1, -2)
+I['-'] = I['−']
 
 # ---------------------------------------------------------------- status-line indicators
 # positions: LCD x of the left edge (screenshot x − 9), top row within the status line
@@ -307,9 +337,13 @@ lines = [
     "  E: { pitch: 11, ascent: 11, descent: 1, glyphs: {",
     js_glyphs(E),
     "  } },",
-    "  // small font: exponents, lists of results, constants and conversions; 6-pixel cells, capitals 9 rows",
+    "  // small font: lists of results, constants and conversions; 6-pixel cells, capitals 9 rows, lowercase 7",
     "  S: { pitch: 6, ascent: 8, descent: 2, glyphs: {",
     js_glyphs(S),
+    "  } },",
+    "  // index font: raised and lowered characters in small-font text; digits and capitals 6 rows, lowercase 5",
+    "  I: { pitch: 6, ascent: 5, descent: 0, glyphs: {",
+    js_glyphs(I),
     "  } },",
     "  // tiny font: table and spreadsheet cells, headers, menu numbers; 6-pixel cells, 7 rows",
     "  T: { pitch: 6, ascent: 6, descent: 1, glyphs: {",
@@ -327,4 +361,4 @@ for name, v in ICONS.items():
         lines.append(f"  {name}: {{ x: {v['x']}, y: {v['y']}, rows: '{'|'.join(v['rows'])}' }},")
 lines.append("};")
 open(out_path, 'w', encoding='utf-8', newline='\n').write('\n'.join(lines) + '\n')
-print('L', len(L), 'E', len(E), 'S', len(S), 'T', len(T), 'icons', len(ICONS))
+print('L', len(L), 'E', len(E), 'S', len(S), 'I', len(I), 'T', len(T), 'icons', len(ICONS))

@@ -742,20 +742,18 @@ function inputInto(prompt, ev) {
   return true;
 }
 
-/** CALC/SOLVE prompt: the expression on top, "A=" with the value (highlighted) or the input on the bottom line. */
+/** CALC/SOLVE prompt: the expression on top; the bottom line "A=5" (or the input) inverted across the whole row. */
 function paintPrompt(lcd, calc, screen, name, editor) {
   const expr = editorBox(screen.editor.root, { math: screen.math, cursor: null });
   drawBox(lcd, expr, 0, 1 + expr.asc);
   const label = name === 'x' ? '𝑥' : name === 'y' ? '𝑦' : name;
   const x = lcd.text(`${label}=`, 0, 61);
-  if (editor) {
-    drawBox(lcd, editorBox(editor.root, { math: false, cursor: editor.cursor(), cursorState: {} }), x, 61);
-  } else {
+  if (editor) drawBox(lcd, editorBox(editor.root, { math: false, cursor: editor.cursor(), cursorState: {} }), x, 61);
+  else {
     const v = calc.mem.vars[name] ?? N.ZERO;
-    const b = textBox(modelText(calc.model(v, { form: 'dec' }), { decimalMark: ',' }).replace('-', '−'));
-    drawBox(lcd, b, 192 - b.w, 61);
-    lcd.invert(192 - b.w, 49, b.w, 14);
+    lcd.text(modelText(calc.model(v, { form: 'dec' }), { decimalMark: ',' }).replace('-', '−'), x, 61);
   }
+  lcd.invert(0, 49, 192, 14);
 }
 
 function promptLine(calc, name, editor) {

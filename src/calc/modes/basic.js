@@ -29,7 +29,7 @@ export const complexMode = {
       optn: (s) => new Menu(calc, [
         page([tokItem(s, 'Argument', 'Arg('), tokItem(s, 'Conjugate', 'Conjg('), tokItem(s, 'Real Part', 'ReP('), tokItem(s, 'Imaginary Part', 'ImP(')]),
         page([tokItem(s, '▸r∠θ', '►r∠θ'), tokItem(s, '▸a+bi', '►a+bi')]),
-        commonOptnPage(calc, (a) => s.apply(a), { eng: false }),
+        commonOptnPage(calc, (a) => s.apply(a)),
       ]),
     }));
   },
@@ -161,7 +161,7 @@ function arrayMode(kind) {
           isMat
             ? page([tokItem(s, 'MatAns', 'MatAns'), tokItem(s, 'Determinant', 'Det('), tokItem(s, 'Transposition', 'Trn('), tokItem(s, 'Identity', 'Identity(')])
             : page([tokItem(s, 'VctAns', 'VctAns'), tokItem(s, 'Dot Product', '•'), tokItem(s, 'Angle', 'Angle('), tokItem(s, 'Unit Vector', 'UnitV(')]),
-          commonOptnPage(calc, (a) => s.apply(a), { eng: false }),
+          commonOptnPage(calc, (a) => s.apply(a)),
         ]),
         onMatrix: () => calc.push(editor(calc, 'Ans', true)),
         onVector: () => calc.push(editor(calc, 'Ans', true)),

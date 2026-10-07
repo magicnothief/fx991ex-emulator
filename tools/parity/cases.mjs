@@ -552,6 +552,12 @@ export const SECTIONS = [
       t('◀ after an error goes to the input (p.37)', 'AC 1 DIV 0 EQ LEFT'),
       t('QR code (p.17)', 'AC 1 ADD 1 EQ SHIFT OPTN', { note: 'Known difference: QR codes are not generated' }),
       t('Overwrite mode in LineI/LineO (p.10)', `AC ${io(3)} 1 2 3 LEFT LEFT SHIFT DEL 9`),
+      t('Electromagnetic constants', 'AC SHIFT 7 2'),
+      t('Physico-Chem constants', 'AC SHIFT 7 4'),
+      t('Adopted Values constants', 'AC SHIFT 7 DOWN 1'),
+      t('Other constants', 'AC SHIFT 7 DOWN 2'),
+      t('CONV categories, page 2', 'AC SHIFT 8 DOWN'),
+      t('CONV categories, ▼▼ (is there a third page?)', 'AC SHIFT 8 DOWN DOWN', { note: "The guide's CONV scrollbar is a third of the track" }),
     ],
   },
   {
@@ -599,6 +605,9 @@ export const SECTIONS = [
       t('AtWt 103 (Lr)', 'AC SHIFT 4 2 1 0 3 EQ'),
       t('AtWt 118 (Og)', 'AC SHIFT 4 2 1 1 8 EQ'),
       t('AtWt 0', 'AC SHIFT 4 2 0 EQ'),
+      t('μN in the input (subscript N)', 'AC SHIFT 7 2 1'),
+      t('RK-90 in the input', 'AC SHIFT 7 DOWN 1 3'),
+      t('λCn in the input', 'AC SHIFT 7 3 DMS'),
     ],
   },
 ];

@@ -66,5 +66,6 @@ export const CONVERSIONS = Object.fromEntries(CONVERSION_GROUPS.flatMap((g) => g
 
 // Menu pages: CONST shows 4 categories, then Adopted Values / Other on the next page.
 export const CONSTANT_PAGES = [[0, 1, 2, 3], [4, 5]];
-// CONV (fx-991CE X): Length, Area, Volume, Mass / Pressure, Energy, Power, Temperature.
+// CONV (fx-991CE X, checked on a unit): Length, Area, Volume, Mass / Pressure, Energy, Power, Temperature.
+// No Velocity category, unlike the fx-991EX Reference Sheet.
 export const CONVERSION_PAGES = [[0, 1, 2, 3], [4, 5, 6, 7]];

@@ -24,7 +24,7 @@ export function glyph(font, ch) {
     }
     const g = f.glyphs[ch] ?? (ch === '-' ? f.glyphs['−'] : null);
     // a glyph missing from a small font comes from the other small font before the main one (𝑥 in exponents)
-    const near = font === 'S' ? 'T' : font === 'T' ? 'S' : null;
+    const near = font === 'S' ? 'T' : font === 'T' || font === 'I' ? 'S' : null;
     if (g) cache.set(key, { x: g[0], bottom: g[1], rows: parse(g[2]) });
     else if (near && FONTS[near].glyphs[ch]) cache.set(key, glyph(near, ch));
     else if (font !== 'L' && FONTS.L.glyphs[ch]) cache.set(key, glyph('L', ch));
@@ -36,32 +36,36 @@ export function glyph(font, ch) {
   return cache.get(key);
 }
 
-/** Splits text into glyph names (a letter followed by a combining mark is one glyph: x̄; so is ⁻¹). */
+/**
+ * Splits text into glyph names (a letter followed by a combining mark is one glyph: x̄; so is ⁻¹). "_" makes
+ * the rest of the word subscripts, named "_" + character (constants: μ_N, R_K-90).
+ */
 export function chars(text) {
   const out = [];
+  let sub = false;
   for (const c of String(text)) {
-    if (/[̀-ͯ]/.test(c) && out.length) out[out.length - 1] += c;
+    if (c === '_') sub = true;
+    else if (/[̀-ͯ]/.test(c) && out.length) out[out.length - 1] += c;
     else if (c === '¹' && out[out.length - 1] === '⁻') out[out.length - 1] = '⁻¹';
-    else out.push(c);
+    else {
+      if (c === ' ') sub = false;
+      out.push(sub ? `_${c}` : c);
+    }
   }
   return out;
 }
+
+/** Text as logged for descriptions and copying: without the subscript marks. */
+const plain = (text) => String(text).replace(/_/g, '');
 
 // "⁻¹" of sin⁻¹, cosh⁻¹ … shares one main-font cell (fx-991EX guide, hyperbolic menu): a 5-px minus 8 rows
 // above the baseline and a small 1 ending 5 rows above it
 const INVERSE = { x: 0, bottom: -5, rows: ['.......##.', '......###.', '.......##.', '#####..##.', '.......##.', '.......##.', '......####'] };
 
-// 3×5 digits for exponents and indices inside small-font text
-const MICRO = {
-  '0': ['###', '#.#', '#.#', '#.#', '###'], '1': ['.#.', '##.', '.#.', '.#.', '###'], '2': ['##.', '..#', '.#.', '#..', '###'],
-  '3': ['##.', '..#', '.#.', '..#', '##.'], '4': ['#.#', '#.#', '###', '..#', '..#'], '5': ['###', '#..', '##.', '..#', '##.'],
-  '6': ['.##', '#..', '###', '#.#', '###'], '7': ['###', '..#', '.#.', '.#.', '.#.'], '8': ['###', '#.#', '###', '#.#', '###'],
-  '9': ['###', '#.#', '###', '..#', '##.'], '−': ['...', '...', '###', '...', '...'], 'x': ['...', '#.#', '.#.', '#.#', '...'], '?': ['###'],
-};
-
-// superscript/subscript characters are drawn with the small font, raised or lowered
+// superscript and subscript characters, drawn raised or lowered with a smaller font
 const SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '−', 'ˣ': 'x' };
-const SUB = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9' };
+const SUB = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9', 'ₚ': 'p' };
+const subscript = (ch) => SUB[ch] ?? (ch.length > 1 && ch[0] === '_' ? ch.slice(1) : undefined);
 
 export class LCD {
   constructor() {
@@ -129,18 +133,20 @@ export class LCD {
       this.bitmap(INVERSE.rows, x + INVERSE.x, base + INVERSE.bottom - INVERSE.rows.length + 1, on);
       return FONTS.L.pitch;
     }
-    const sup = SUP[ch], sub = SUB[ch];
+    const sup = SUP[ch];
+    const sub = subscript(ch);
     if (sup || sub) {
       if (font === 'L') {
         // inside main-font text: tiny digits within the cell height (top at the capital height), subscripts lowered
         const g = glyph('T', sup ?? sub);
         this.bitmap(g.rows, x + g.x, base + (sup ? -5 : 3) + g.bottom - g.rows.length + 1, on);
-        return FONTS.T.pitch;
+        return advance(ch, font);
       }
-      // inside small text (σ²x, Q₁, c₀): 3×5 micro digits that stay within the line
-      const rows = MICRO[sup ?? sub] ?? MICRO['?'];
-      this.bitmap(rows, x, sup ? base - 8 : base - 3, on);
-      return 4;
+      // inside small text, in the text's own cells (User's Guide: Σx², ×10¹⁰, c₀): index-font glyphs; subscripts
+      // stand on the baseline, superscripts end 3 rows above it (their 6-row digits reach the capital height)
+      const g = glyph('I', sup ?? sub);
+      this.bitmap(g.rows, x + g.x, (sup ? base - 3 : base) + g.bottom - g.rows.length + 1, on);
+      return advance(ch, font);
     }
     const g = glyph(font, ch);
     this.bitmap(g.rows, x + g.x, base + g.bottom - g.rows.length + 1, on);
@@ -151,7 +157,7 @@ export class LCD {
   text(text, x, base, { font = 'L', invert = false, log = true } = {}) {
     const start = x;
     for (const c of chars(text)) x += this.glyph(c, x, base, font, invert ? 0 : 1);
-    if (log && String(text).trim()) this.runs.push({ x: start, y: base, text: String(text) });
+    if (log && String(text).trim()) this.runs.push({ x: start, y: base, text: plain(text) });
     return x;
   }
 
@@ -169,7 +175,7 @@ export class LCD {
 
   /** Logs text for descriptions without drawing it (formulas draw their own glyphs). */
   note(text, x, y) {
-    if (String(text).trim()) this.runs.push({ x, y, text: String(text) });
+    if (String(text).trim()) this.runs.push({ x, y, text: plain(text) });
   }
 
   // ------------------------------------------------------------ status line
@@ -202,17 +208,22 @@ export class LCD {
 export const LINES = [12, 28, 44, 60];
 export const SMALL_LINES = [9, 19, 29, 39, 49, 59];
 
-/** Page scrollbar at the right edge: 3 px wide, one segment of the track per page, rounded ends. */
+/** Page scrollbar at the right edge: 4 px wide (x 188–191), one segment of the track per page, rounded ends. */
 export function scrollbar(lcd, page, pages) {
   if (pages <= 1) return;
   const top = 1 + Math.round((page * 62) / pages);
   const bot = Math.round(((page + 1) * 62) / pages);
-  lcd.fill(189, top, 3, bot - top + 1);
-  for (const y of [top, bot]) { lcd.dot(189, y, 0); lcd.dot(191, y, 0); }
+  lcd.fill(188, top, 4, bot - top + 1);
+  for (const y of [top, bot]) { lcd.dot(188, y, 0); lcd.dot(191, y, 0); }
+}
+
+/** Cell width of a glyph name from chars(): main-font text sets its raised and lowered characters in tiny cells. */
+export function advance(ch, font = 'L') {
+  return font === 'L' && (SUP[ch] || subscript(ch)) ? FONTS.T.pitch : (FONTS[font] ?? FONTS.L).pitch;
 }
 
 export function textWidth(text, font = 'L') {
-  return chars(text).length * (FONTS[font] ?? FONTS.L).pitch;
+  return chars(text).reduce((w, ch) => w + advance(ch, font), 0);
 }
 
 /**

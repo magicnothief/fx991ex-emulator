@@ -33,7 +33,7 @@ function statusBar(calc, st) {
 const pixels = new LCD();
 
 /** Status line on the pixel display: indicator bitmaps at their fixed positions. */
-function paintStatus(lcd, calc, st) {
+export function paintStatus(lcd, calc, st) {
   const s = calc.setup;
   if (st.only) { // MENU: only the scroll arrows
     if (st.down) lcd.icon('down');

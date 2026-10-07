@@ -13,6 +13,9 @@ export function pageBar(page, pages) {
   return bar;
 }
 
+// column spacing by font and column count; three small-font columns start one pixel in
+const COLUMN = { L: { 1: 0, 2: 96, 3: 66 }, S: { 1: 0, 2: 96, 3: 60 } };
+
 /**
  * A paged menu. pages: [{ items: [{ label, run(calc) }], cols = 1, small = false }]
  * Items are numbered per page (1–9, A–F, M, x). ▲/▼ change page, ◀ returns to the parent menu.
@@ -63,7 +66,7 @@ export class Menu {
     const cols = page.cols || 1;
     const el = h('div', `menu${page.small ? ' small' : ''}`);
     if (this.title) el.append(h('div', 'item title', t(this.title)));
-    const items = page.items.map((it, i) => h('div', 'item', `${MENU_KEYS[i]}:${t(it.label)}`));
+    const items = page.items.map((it, i) => h('div', 'item', `${MENU_KEYS[i]}:${t(it.label).replace(/_/g, '')}`));
     const rows = Math.ceil(page.items.length / cols) + (this.title ? 1 : 0);
     if (rows > 5) {
       // pages with many rows (CONV Length, Atomic&Nuclear) use a tighter line pitch
@@ -82,6 +85,7 @@ export class Menu {
   /**
    * Main-font menus: four lines (pitch 16), two items on a line from page.pairFrom on (second item at the
    * tenth cell, as "3:MatA   4:MatB"); small-font pages: six lines (pitch 10) in 1–3 columns.
+   * Columns as in the User's Guide: Engineer Symbol 0/66/132, CONV lists 0/96, CONST lists 1/61/121.
    */
   paint(lcd) {
     const page = this.pages[this.page];
@@ -100,8 +104,9 @@ export class Menu {
         x = i >= pairFrom && (i - pairFrom) % 2 ? 99 : 0;
       } else {
         r = Math.floor(i / cols);
-        x = (i % cols) * Math.floor(192 / cols);
+        x = (i % cols) * COLUMN[font][cols];
       }
+      if (small && cols === 3) x += 1;
       if (line + r < lines.length) lcd.text(`${MENU_KEYS[i]}:${t(it.label)}`, x, lines[line + r], { font });
     });
     scrollbar(lcd, this.page, this.pages.length);

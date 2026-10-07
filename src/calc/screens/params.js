@@ -124,8 +124,11 @@ export class ParamScreen {
 
 /** A scrollable list of "label = value" rows. rows: [{ label, value }] */
 export class ListScreen {
-  /** dense: small font with six rows per screen, as the statistics result lists use */
-  constructor(calc, rows, { title = null, onClose = null, onEq = null, dense = false } = {}) {
+  /**
+   * dense: small font with six rows per screen, as the statistics result lists use. at: { x, label, eq }
+   * columns of the title, the labels and the "=" (default: labels at the left edge, "=" after 4 or 6 cells).
+   */
+  constructor(calc, rows, { title = null, onClose = null, onEq = null, dense = false, at = {} } = {}) {
     this.calc = calc;
     this.rows = rows;
     this.title = title;
@@ -133,6 +136,8 @@ export class ListScreen {
     this.onClose = onClose;
     this.onEq = onEq;
     this.dense = dense;
+    const x = at.x ?? 0;
+    this.at = { x, label: at.label ?? x, eq: at.eq ?? (dense ? 36 : 44) };
   }
 
   get visible() { return (this.dense ? 6 : 4) - (this.title ? 1 : 0); }
@@ -183,10 +188,8 @@ export class ListScreen {
     const vis = this.visible;
     const font = this.dense ? 'S' : 'L';
     const lines = this.dense ? SMALL_LINES : LINES;
-    const pitch = this.dense ? 6 : 11;
     let line = 0;
-    if (this.title) lcd.text(t(this.title), 0, lines[line++], { font });
-    const labelCells = this.dense ? 6 : 4;
+    if (this.title) lcd.text(t(this.title), this.at.x, lines[line++], { font });
     for (const r of this.rows.slice(this.top, this.top + vis)) {
       let v;
       try {
@@ -195,10 +198,12 @@ export class ListScreen {
         if (!(e instanceof CalcError)) throw e;
         v = null;
       }
-      const val = v == null ? 'ERROR' : typeof v === 'string' ? v : modelText(this.calc.model(v, { form: 'dec' }), { decimalMark: ',' }).replace('-', '−');
+      // small-font results keep the short sign of a negative number (a=-852,1627746)
+      const text = v == null ? 'ERROR' : typeof v === 'string' ? v : modelText(this.calc.model(v, { form: 'dec' }), { decimalMark: ',' });
+      const val = this.dense ? text : text.replace('-', '−');
       const base = lines[line++];
-      lcd.text(String(r.label).trim(), 0, base, { font });
-      lcd.text(`=${val}`, labelCells * pitch, base, { font });
+      lcd.text(String(r.label).trim(), this.at.label, base, { font });
+      lcd.text(`=${val}`, this.at.eq, base, { font });
     }
     if (this.rows.length > vis) {
       if (this.dense) scrollbar(lcd, this.top / vis, Math.ceil(this.rows.length / vis));
