@@ -118,14 +118,13 @@ function setUpdateState(s) {
   win?.webContents.send('update-state', s);
 }
 
-/** Updates are published to the GitHub repository named in package.json → build.publish. */
+/**
+ * Updates come from the GitHub repository named in package.json → build.publish. electron-builder leaves
+ * that section out of the packaged package.json and writes it to resources/app-update.yml instead, which
+ * is what electron-updater reads.
+ */
 function updatesConfigured() {
-  try {
-    const pub = require('../package.json').build.publish[0];
-    return pub.owner && pub.owner !== 'CHANGE-ME';
-  } catch {
-    return false;
-  }
+  return fs.existsSync(path.join(process.resourcesPath, 'app-update.yml'));
 }
 
 function initUpdater() {
@@ -153,7 +152,7 @@ async function checkForUpdatesInteractive() {
       message: 'Automatic updates are not set up for this copy.',
       detail: !app.isPackaged
         ? 'This copy is running from source. Install the app with the setup program to receive automatic updates.'
-        : 'This build has no update source configured (package.json → build.publish).',
+        : 'This build has no update source (resources/app-update.yml).',
     });
     return;
   }
