@@ -36,15 +36,20 @@ export function glyph(font, ch) {
   return cache.get(key);
 }
 
-/** Splits text into glyph names (a letter followed by a combining mark is one glyph: x̄). */
+/** Splits text into glyph names (a letter followed by a combining mark is one glyph: x̄; so is ⁻¹). */
 export function chars(text) {
   const out = [];
   for (const c of String(text)) {
     if (/[̀-ͯ]/.test(c) && out.length) out[out.length - 1] += c;
+    else if (c === '¹' && out[out.length - 1] === '⁻') out[out.length - 1] = '⁻¹';
     else out.push(c);
   }
   return out;
 }
+
+// "⁻¹" of sin⁻¹, cosh⁻¹ … shares one main-font cell (fx-991EX guide, hyperbolic menu): a 5-px minus 8 rows
+// above the baseline and a small 1 ending 5 rows above it
+const INVERSE = { x: 0, bottom: -5, rows: ['.......##.', '......###.', '.......##.', '#####..##.', '.......##.', '.......##.', '......####'] };
 
 // 3×5 digits for exponents and indices inside small-font text
 const MICRO = {
@@ -120,12 +125,17 @@ export class LCD {
 
   /** One glyph in the cell starting at x; base is the baseline row. Returns the cell advance. */
   glyph(ch, x, base, font = 'L', on = 1) {
+    if (ch === '⁻¹' && font === 'L') {
+      this.bitmap(INVERSE.rows, x + INVERSE.x, base + INVERSE.bottom - INVERSE.rows.length + 1, on);
+      return FONTS.L.pitch;
+    }
     const sup = SUP[ch], sub = SUB[ch];
     if (sup || sub) {
-      if (font === 'L') { // small-font digits, raised 7 rows or lowered 3
-        const g = glyph('S', sup ?? sub);
-        this.bitmap(g.rows, x + g.x, base + (sup ? -7 : 3) + g.bottom - g.rows.length + 1, on);
-        return FONTS.S.pitch;
+      if (font === 'L') {
+        // inside main-font text: tiny digits within the cell height (top at the capital height), subscripts lowered
+        const g = glyph('T', sup ?? sub);
+        this.bitmap(g.rows, x + g.x, base + (sup ? -5 : 3) + g.bottom - g.rows.length + 1, on);
+        return FONTS.T.pitch;
       }
       // inside small text (σ²x, Q₁, c₀): 3×5 micro digits that stay within the line
       const rows = MICRO[sup ?? sub] ?? MICRO['?'];

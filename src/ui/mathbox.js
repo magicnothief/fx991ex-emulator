@@ -108,11 +108,20 @@ function paren(open, asc, desc, st = STYLE.L) {
   }, open ? '(' : ')');
 }
 
-/** Empty input box: solid outline (User's Guide p.8). */
-function emptyBox(st) {
+/**
+ * Empty input box: solid outline (User's Guide p.8) sitting on the baseline like a digit, with the blank
+ * descender row below it; when the cursor is in the box it blinks inside the outline.
+ */
+function emptyBox(st, cursor = null) {
   const h = st === STYLE.L ? 10 : 7;
   const bw = st === STYLE.L ? 7 : 5;
-  return box(bw + 2, h, 0, (lcd, x, base) => lcd.frame(x + 1, base - h + 1, bw, h), '□');
+  return box(bw + 2, h - 1, st.desc, (lcd, x, base) => {
+    lcd.frame(x + 1, base - h + 1, bw, h);
+    if (cursor && lcd.cursorOn) {
+      if (cursor.block) lcd.fill(x + 2, base - h + 2, bw - 2, h - 2);
+      else lcd.vline(x + 3, base - h + 2, base - 1);
+    }
+  }, '□');
 }
 
 function cursorBox(st, state) {
@@ -139,7 +148,7 @@ function tokenText(id) {
 /** Lays out a slot (array of nodes) in style st; the cursor is drawn where opts.cursor points. */
 function slotBox(slot, st, opts, root = false) {
   const here = opts.cursor && opts.cursor.slot === slot;
-  if (slot.length === 0 && !root) return row([here ? cursorBox(st, opts.cursorState ?? {}) : null, emptyBox(st)]);
+  if (slot.length === 0 && !root) return emptyBox(st, here ? opts.cursorState ?? {} : null);
   const items = [];
   const parens = []; // indices of '(' boxes for stretching
   const add = (b, kind) => { items.push(b); if (kind) parens.push([kind, items.length - 1]); };

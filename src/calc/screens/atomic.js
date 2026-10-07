@@ -16,6 +16,8 @@ const CELLS = new Map([
   ...SERIES.map((sr) => [key(sr.row, sr.col), sr]),
 ]);
 const ROWS = 9;
+// 3×4 letters of the series cells and row labels
+const SERIES_LETTER = { L: ['#..', '#..', '#..', '###'], A: ['.#.', '#.#', '###', '#.#'] };
 
 class PeriodicTable {
   constructor(calc, apply) {
@@ -81,25 +83,33 @@ class PeriodicTable {
     return { el: h('div', 'ptable-screen', table, panel), status: { noMath: true } };
   }
 
-  /** Cells of 6×5 pixels (18 groups, the two series rows below), the selected cell filled; Z, symbol, weight right. */
+  /**
+   * The guide's periodic table (User's Guide p.39): a grid of 6-pixel cells with shared borders (x 0–108,
+   * rows from y 2), the lanthanoid and actinoid rows 4 px below it under groups 4–18, "L"/"A" in their group-3
+   * cells and before their rows, the selected cell filled; Z, symbol and weight centred on the right.
+   */
   paint(lcd) {
     const sel = CELLS.get(key(this.row, this.col));
-    const cx = (col) => 1 + (col - 1) * 6;
-    const cy = (row) => 1 + (row - 1) * 5 + (row >= 8 ? 3 : 0);
+    const cx = (row, col) => 6 * (col - 1) + (row >= 8 ? 6 : 0);
+    const cy = (row) => (row >= 8 ? 48 + 6 * (row - 8) : 2 + 6 * (row - 1));
     for (const [k, cell] of CELLS) {
       const [row, col] = k.split(',').map(Number);
-      if (cell === sel) lcd.fill(cx(col), cy(row), 7, 6);
-      else lcd.frame(cx(col), cy(row), 7, 6);
+      const x = cx(row, col), y = cy(row);
+      if (cell === sel) lcd.fill(x, y, 7, 7);
+      else lcd.frame(x, y, 7, 7);
+      if (cell.letter) lcd.bitmap(SERIES_LETTER[cell.letter], x + 2, y + 1, cell === sel ? 0 : 1);
     }
-    for (const sr of SERIES) lcd.text(sr.letter, cx(2) - 1, cy(sr.labelRow) + 5, { font: 'T' });
+    for (const sr of SERIES) lcd.bitmap(SERIES_LETTER[sr.letter], 14, cy(sr.labelRow) + 1);
     const info = sel.z
       ? [String(sel.z), sel.symbol, sel.bracket ? `[${sel.weight}]` : sel.weight.replace('.', ',')]
       : [sel.range, t(sel.name), ''];
-    lcd.textRight(info[0], 192, 14);
-    lcd.textRight(info[1], 192, 30);
-    if (info[2]) lcd.textRight(info[2], 192, 46, { font: 'S' });
+    const centre = (text, base, font, pitch) => lcd.text(text, 150 - Math.floor((text.length * pitch) / 2), base, { font });
+    centre(info[0], 19, 'L', 11);
+    centre(info[1], 37, 'L', 11);
+    if (info[2]) centre(info[2], 52, 'S', 6);
     return { noMath: true };
   }
+
 }
 
 export function atomicMenu(calc, apply) {
