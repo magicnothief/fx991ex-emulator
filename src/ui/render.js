@@ -113,7 +113,7 @@ export function renderModel(m, opts = {}) {
     case 'dec': {
       const parts = [num(m.m)];
       if (m.sym) parts.push(m.sym);
-      if (m.e != null) parts.push('×10', h('span', 'm-sup', String(m.e).replace('-', '−')));
+      if (m.e != null) parts.push('×10', h('span', 'm-sup', String(m.e)));
       return h('span', 'm-row', parts);
     }
     case 'frac': return h('span', 'm-row', sign(m.neg), frac(m.n, m.d));

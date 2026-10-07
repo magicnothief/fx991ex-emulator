@@ -75,8 +75,8 @@ const NUM_ROWS = [
 
 // ---------------------------------------------------------------- geometry (design px)
 
-const FN = { x: [64.6, 131.8, 199, 266.2, 333.5, 400.7], w: 53, h: 37, top: [505, 559, 614], optnTop: 450, pitch: 67 };
-const NUM = { x: [67.2, 147.9, 228.5, 309.2, 389.8], w: 66, h: 45, top: [673, 740, 807, 874], pitch: 80 };
+const FN = { x: [64.6, 131.8, 199, 266.2, 333.5, 400.7], w: 56, h: 37, top: [505, 559, 614], optnTop: 450, pitch: 67 };
+const NUM = { x: [67.2, 147.9, 228.5, 309.2, 389.8], w: 70, h: 48, top: [673, 740, 807, 874], pitch: 80 };
 const ROUND = { x: [59.5, 120.5, 337.5, 398.5], y: 389, d: 36 };
 const PAD = { x: 157, y: 364, w: 148, h: 104 };
 
@@ -99,7 +99,7 @@ function place(el, x, y, w, h) {
 function key(def, kind, cx, top, w, h, pitch) {
   const [id, face, labels, variant] = def;
   const frag = document.createDocumentFragment();
-  const lab = place(document.createElement('div'), cx - pitch / 2, top - 15, pitch, 14);
+  const lab = place(document.createElement('div'), cx - pitch / 2, top - 17, pitch, 16);
   lab.className = 'labels';
   lab.innerHTML = labelsHtml(labels);
   const btn = place(document.createElement('button'), cx - w / 2, top, w, h);
@@ -162,7 +162,7 @@ export function buildKeypad(root, onKey) {
   ];
   ['SHIFT', 'ALPHA', 'MENU', 'ON'].forEach((id, i) => {
     const x = ROUND.x[i];
-    const lab = place(document.createElement('div'), x - 40, ROUND.y - ROUND.d / 2 - 17, 80, 14);
+    const lab = place(document.createElement('div'), x - 40, ROUND.y - ROUND.d / 2 - 19, 80, 16);
     lab.className = 'labels round-label';
     lab.innerHTML = roundLabels[i];
     const btn = place(document.createElement('button'), x - ROUND.d / 2, ROUND.y - ROUND.d / 2, ROUND.d, ROUND.d);

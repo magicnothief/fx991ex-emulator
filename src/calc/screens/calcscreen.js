@@ -668,7 +668,7 @@ export class RecallScreen {
     names.forEach((n, i) => {
       const v = this.calc.mem.vars[n] ?? N.ZERO;
       const label = n === 'x' ? '𝑥' : n === 'y' ? '𝑦' : n;
-      lcd.text(`${label}=${modelText(model(v), { decimalMark: ',' }).replace('-', '−')}`, (i % 2) * 97, SMALL_LINES[Math.floor(i / 2)], { font: 'S' });
+      lcd.text(`${label}=${modelText(model(v), { decimalMark: ',' })}`, (i % 2) * 97, SMALL_LINES[Math.floor(i / 2)], { font: 'S' });
     });
   }
 }
@@ -751,7 +751,7 @@ function paintPrompt(lcd, calc, screen, name, editor) {
   if (editor) drawBox(lcd, editorBox(editor.root, { math: false, cursor: editor.cursor(), cursorState: {} }), x, 61);
   else {
     const v = calc.mem.vars[name] ?? N.ZERO;
-    lcd.text(modelText(calc.model(v, { form: 'dec' }), { decimalMark: ',' }).replace('-', '−'), x, 61);
+    lcd.text(modelText(calc.model(v, { form: 'dec' }), { decimalMark: ',' }), x, 61);
   }
   lcd.invert(0, 49, 192, 14);
 }

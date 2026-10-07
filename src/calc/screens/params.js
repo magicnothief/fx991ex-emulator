@@ -114,7 +114,7 @@ export class ParamScreen {
       if (idx === this.i && this.editor) {
         drawBox(lcd, editorBox(this.editor.root, { math: false, cursor: this.editor.cursor(), cursorState: {} }), x, base);
       } else {
-        lcd.text(modelText(this.calc.model(values[p.key], { form: 'dec' }), { decimalMark: ',' }).replace('-', '−'), x, base);
+        lcd.text(modelText(this.calc.model(values[p.key], { form: 'dec' }), { decimalMark: ',' }), x, base);
       }
       if (idx === this.i) lcd.invert(0, base - 12, 192, 14);
     });
@@ -198,9 +198,7 @@ export class ListScreen {
         if (!(e instanceof CalcError)) throw e;
         v = null;
       }
-      // small-font results keep the short sign of a negative number (a=-852,1627746)
-      const text = v == null ? 'ERROR' : typeof v === 'string' ? v : modelText(this.calc.model(v, { form: 'dec' }), { decimalMark: ',' });
-      const val = this.dense ? text : text.replace('-', '−');
+      const val = v == null ? 'ERROR' : typeof v === 'string' ? v : modelText(this.calc.model(v, { form: 'dec' }), { decimalMark: ',' });
       const base = lines[line++];
       lcd.text(String(r.label).trim(), this.at.label, base, { font });
       lcd.text(`=${val}`, this.at.eq, base, { font });

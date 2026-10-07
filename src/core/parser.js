@@ -260,7 +260,8 @@ class Parser {
 
   negation() {
     const it = this.peek();
-    if (it && it.ty === 'tok' && it.id === 'neg') {
+    // where a value is expected, the subtraction key works as the minus sign too: "− 5 =", a coefficient "− 3"
+    if (it && it.ty === 'tok' && (it.id === 'neg' || it.id === '-')) {
       this.next();
       return { t: 'neg', a: this.negation() };
     }

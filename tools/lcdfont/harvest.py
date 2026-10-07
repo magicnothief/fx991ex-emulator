@@ -73,6 +73,8 @@ harvest(stat, 'I', 6, 8, 0, [(48, 29, '2')])
 reg = shot('cex.pdf', 127)
 harvest(reg, 'S', 6, 8, 2, [(36, 9, 'y=a+b·ln(x)'), (66, 39, 'r')])
 harvest(shot('cex.pdf', 81), 'I', 6, 8, 0, [(60, 45, '1')])  # M=7,2115×10¹⁰ (recall screen)
+# Inequality solution with letters (p.32), cropped one row lower than the display: "a<x<b;c<x"
+harvest(shot('cex.pdf', 185), 'S', 6, 8, 2, [(0, 8, 'a<x<b;c<x')], keep='<;')
 
 json.dump(H, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
 print({f: len(g) for f, g in H.items()})

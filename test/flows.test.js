@@ -205,3 +205,22 @@ test('x², x⁻¹, x! and x▪ with nothing before them open an empty base box i
   assert.equal(keys(fresh(), 'AC SQR EQ').top.kind, 'Syntax ERROR'); // empty box
   assert.deepEqual(keys(fresh(), 'SHIFT MENU 1 3 AC SQR').top.editor.root.map((n) => n.id), ['²']); // Line input: no box
 });
+
+test('the subtraction key works as the minus sign where a value is expected', () => {
+  assert.equal(result(keys(fresh(), 'AC SUB 5 EQ')), '-5');
+  assert.equal(result(keys(fresh(), 'AC 2 MUL SUB 3 EQ')), '-6');
+  assert.equal(result(keys(fresh(), 'AC SUB 2 SQR EQ')), '-4'); // the sign binds looser than x²
+  assert.equal(result(keys(fresh(), 'AC 2 SUB 5 EQ')), '-3');
+  assert.equal(result(keys(fresh(), 'MENU 2 SUB 1 ADD ENG EQ')), '-1+1i');
+  const p = keys(fresh(), 'MENU NEG 2 2 1 EQ SUB 3 EQ 2 EQ EQ'); // x² − 3x + 2 = 0
+  assert.equal(modelText(p.top.calc.model(p.top.items[0].value, {})), '2');
+});
+
+test('OPTN inside the vector editor: Define/Edit/Vector Calc, and functions into the cell', () => {
+  const c = keys(fresh(), 'MENU 5 1 2 1 EQ 2 EQ OPTN');
+  assert.equal(c.top.constructor.name, 'Menu');
+  keys(c, '3');
+  assert.equal(c.top.constructor.name, 'CalcScreen'); // Vector Calc: back to the calculation
+  const g = keys(fresh(), 'MENU 5 1 2 OPTN DOWN 1 1 1 RP EQ').top; // sinh(1) into VctA's first cell
+  assert.equal(modelText(g.calc.model(g.spec.get(0, 0), { form: 'dec' })).slice(0, 6), '1.1752');
+});

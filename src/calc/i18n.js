@@ -35,6 +35,7 @@ const HU = {
   'Imaginary Part': 'Képzetes rész', 'Define Matrix': 'Mátrix megadás', 'Edit Matrix': 'Mátrix szerk',
   Determinant: 'Determináns', Transposition: 'Transzponálás', Identity: 'Egységmátrix',
   'Define Vector': 'Vektor megadás', 'Edit Vector': 'Vektor szerk', 'Dot Product': 'Skalárszorzat',
+  'Vector Calc': 'Vektorszámítás', 'Matrix Calc': 'Mátrixszámítás', //? (Mátrix… by analogy with the vector menu)
   Angle: 'Szög', 'Unit Vector': 'Egységvektor',
   'Number of Rows?': 'Sorok száma?', //?
   'Number of Columns?': 'Oszlopok száma?', //?
@@ -44,7 +45,7 @@ const HU = {
   'Select 2~4': '2~4 választ',
   // statistics and distribution
   'Select Type': 'Típus választás', '1-Variable': '1 változós', Editor: 'Szerkesztő', 'Insert Row': 'Sor beilleszt',
-  'Delete All': 'Mindent töröl', '1-Variable Calc': '1-változós stat', '2-Variable Calc': '2-változós stat',
+  'Delete All': 'Mindent töröl', '1-Variable Calc': '1−változós stat', '2-Variable Calc': '2−változós stat',
   'Regression Calc': 'Regresszió szám', Data: 'Adatok', Summation: 'Összegzés', Variable: 'Változó',
   Regression: 'Regresszió', 'Norm Dist': 'Norm eloszlás', Freq: 'Gyak',
   'No Data': 'Nincs adat', //?
@@ -69,7 +70,7 @@ const HU = {
   Bytes: 'bájt', //?
   // constants, conversions, atomic weights
   Universal: 'Univerzális', Electromagnetic: 'Elektromágneses', 'Atomic&Nuclear': 'Atom és mag',
-  'Physico-Chem': 'Fiziko-kémia', 'Adopted Values': 'Vál értékek', Other: 'Egyéb',
+  'Physico-Chem': 'Fiziko−kémia', 'Adopted Values': 'Vál értékek', Other: 'Egyéb',
   Length: 'Hossz', Area: 'Terület', Volume: 'Térfogat', Mass: 'Tömeg', Pressure: 'Nyomás',
   Energy: 'Energia', Power: 'Teljesítmény', Temperature: 'Hőmérséklet',
   'Periodic Table': 'Periód tábla', 'Atomic Weight': 'Atomtömeg', 'Lanth': 'Lant', 'Actin': 'Akti',

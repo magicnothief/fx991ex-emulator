@@ -96,6 +96,20 @@ function arrayMode(kind) {
       },
       onAC: () => calc.pop(),
       onSto: (g) => { g.stoPending = true; },
+      // OPTN in the editor (fx-991CE X): Define / Edit / back to the calculation, then the common page,
+      // whose functions go into the selected cell
+      onOptn: (g) => calc.push(new Menu(calc, [
+        page([
+          item(`Define ${isMat ? 'Matrix' : 'Vector'}`, () => calc.push(pickMenu(calc, (n) => define(calc, n)))),
+          item(`Edit ${isMat ? 'Matrix' : 'Vector'}`, () => calc.push(pickMenu(calc, (n) => edit(calc, n), true, 'Edit'))),
+          item(`${isMat ? 'Matrix' : 'Vector'} Calc`, () => { closeMenus(calc); calc.pop(); }),
+        ]),
+        commonOptnPage(calc, (a) => {
+          if (readOnly) return;
+          if (!g.editor) g.startEdit();
+          g.insert(a);
+        }),
+      ])),
     };
     const g = new GridScreen(calc, spec);
     const baseHandle = g.handle.bind(g);
@@ -125,11 +139,22 @@ function arrayMode(kind) {
     return g;
   }
 
+  // from a menu over the calculation screen or over an editor: the new editor replaces the old one
+  function openEditor(calc, name) {
+    closeMenus(calc);
+    if (calc.top instanceof GridScreen) calc.pop();
+    calc.push(editor(calc, name));
+  }
+
+  function edit(calc, name) {
+    if (store(calc)[name]) openEditor(calc, name);
+    else define(calc, name);
+  }
+
   function define(calc, name) {
     const finish = (value) => {
       store(calc)[name] = value;
-      closeMenus(calc);
-      calc.push(editor(calc, name));
+      openEditor(calc, name);
     };
     if (isMat) {
       calc.push(new SizePrompt(calc, [`${prefix}${name}`, 'Number of Rows?', 'Select 1~4'], 1, 4, (r) => {
@@ -151,11 +176,7 @@ function arrayMode(kind) {
         optn: (s) => new Menu(calc, [
           page([
             item(`Define ${isMat ? 'Matrix' : 'Vector'}`, () => calc.push(pickMenu(calc, (n) => define(calc, n)))),
-            item(`Edit ${isMat ? 'Matrix' : 'Vector'}`, () => calc.push(pickMenu(calc, (n) => {
-              closeMenus(calc);
-              if (store(calc)[n]) calc.push(editor(calc, n));
-              else define(calc, n);
-            }, true, 'Edit'))),
+            item(`Edit ${isMat ? 'Matrix' : 'Vector'}`, () => calc.push(pickMenu(calc, (n) => edit(calc, n), true, 'Edit'))),
             ...NAMES.map((n) => tokItem(s, `${prefix}${n}`, `${prefix}${n}`)),
           ], { pairFrom: 2 }), // "1:Define Matrix", "2:Edit Matrix", then "3:MatA   4:MatB", "5:MatC   6:MatD"
           isMat

@@ -143,7 +143,7 @@ const ITALIC = { vx: '𝑥', vy: '𝑦' };
 
 function tokenText(id) {
   if (ITALIC[id]) return ITALIC[id];
-  if (id === 'neg') return '−';
+  if (id === 'neg') return '-'; // the sign of a negative number: shorter than the subtraction operator
   if (id === 'vi' || id === 'i') return '𝑖';
   if (id === 'e') return '𝑒';
   return tokenInfo(id).text;
@@ -290,19 +290,19 @@ function lineBox(nodes, opts) {
 export function modelBox(m, opts = {}, st = STYLE.L) {
   const num = (s) => groupDigits(String(s).replace('.', ','), opts.digitSep, ',');
   const t = (s) => textBox(s, st);
-  const neg = (b, isNeg) => (isNeg ? row([t('−'), b]) : b);
+  const neg = (b, isNeg) => (isNeg ? row([t('-'), b]) : b); // short sign of a negative value ("-25", p.25)
   switch (m.t) {
     case 'dec': {
-      const items = [t(num(m.m).replace('-', '−'))];
+      const items = [t(num(m.m))];
       if (m.sym) items.push(textBox(m.sym, st, 'E'));
-      if (m.e != null) items.push(t('×10'), raised(textBox(String(m.e).replace('-', '−'), STYLE.S), st));
+      if (m.e != null) items.push(t('×10'), raised(textBox(String(m.e), STYLE.S), st));
       return row(items);
     }
     case 'frac': return neg(frac(t(m.n), t(m.d), st), m.neg);
     case 'mixed': return neg(row([t(m.w), frac(t(m.n), t(m.d), st)]), m.neg);
     case 'surd': {
       const terms = m.terms.map((tm, i) => row([
-        i > 0 || tm.s === '-' ? t(tm.s === '-' ? '−' : '+') : null,
+        i > 0 ? t(tm.s === '-' ? '−' : '+') : tm.s === '-' ? t('-') : null,
         tm.c ? t(tm.c) : null,
         tm.r ? radical(t(tm.r)) : null,
       ]));
@@ -315,7 +315,7 @@ export function modelBox(m, opts = {}, st = STYLE.L) {
       const pi = coef?.bars ? box(st.pitch, st.asc + 1, 0, (lcd, x, base) => lcd.glyph('π', x, base - 1, st.font), 'π') : t('π');
       return neg(row([coef, pi]), m.neg);
     }
-    case 'dms': return t(`${m.neg ? '−' : ''}${m.deg}°${m.min}'${num(m.sec)}"`);
+    case 'dms': return t(`${m.neg ? '-' : ''}${m.deg}°${m.min}'${num(m.sec)}"`);
     case 'fact': {
       const items = [];
       m.factors.forEach(([p, e], i) => {
@@ -333,7 +333,7 @@ export function modelBox(m, opts = {}, st = STYLE.L) {
         const imNeg = m.im.neg || (m.im.t === 'dec' && m.im.m.startsWith('-'));
         const imAbs = imNeg ? stripSign(m.im) : m.im;
         if (m.re) items.push(t(imNeg ? '−' : '+'));
-        else if (imNeg) items.push(t('−'));
+        else if (imNeg) items.push(t('-'));
         const unit = m.im.t === 'dec' && m.im.m.replace('-', '') === '1' && m.im.e == null;
         if (!unit) items.push(modelBox(imAbs, opts, st));
         items.push(t('𝑖'));
@@ -344,7 +344,7 @@ export function modelBox(m, opts = {}, st = STYLE.L) {
     case 'cfrac': {
       const items = [];
       if (m.re) items.push(modelBox(m.re, opts, st), t(m.im.neg ? '−' : '+'));
-      else if (m.im.neg) items.push(t('−'));
+      else if (m.im.neg) items.push(t('-'));
       const im = { ...m.im, neg: false };
       const unit = im.terms.length === 1 && !im.terms[0].r && im.terms[0].c === '1';
       if (!unit) items.push(modelBox(im, opts, st));

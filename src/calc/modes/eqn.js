@@ -36,11 +36,10 @@ class Prompt {
 
 /** Shows labelled results one at a time; = / ▼ advance, ▲ goes back, STO assigns to a variable. */
 class SolutionScreen {
-  constructor(calc, items, { header = null } = {}) {
+  constructor(calc, items) {
     this.calc = calc;
-    this.items = items; // [{ label, value }]
+    this.items = items; // [{ label, value, title? }]
     this.i = 0;
-    this.header = header;
   }
 
   handle(ev) {
@@ -65,7 +64,7 @@ class SolutionScreen {
   view() {
     const it = this.items[this.i];
     const el = h('div', null);
-    if (this.header) el.append(h('div', 'expr-area', this.header));
+    if (it.title) el.append(h('div', 'expr-area', it.title));
     const row = h('div', 'result-area', h('span', null, h('span', 'm-row', labelEl(it.label))), h('span', null, renderModel(this.calc.model(it.value, {}), {})));
     row.style.justifyContent = 'space-between';
     row.style.alignItems = 'center';
@@ -73,20 +72,17 @@ class SolutionScreen {
     return { el, status: { up: this.i > 0, down: this.i < this.items.length - 1, sto: this.sto } };
   }
 
-  /** "x₁=" on the left of the bottom line and the value right-aligned; an optional header line on top. */
+  /**
+   * As on the fx-991CE X (photos of a unit): the equation on the first line when there is one
+   * ("ax²+bx+c=0", "y=ax²+bx+c min"), the label "x₁=" on the next line, the value right-aligned at the bottom.
+   */
   paint(lcd) {
     const it = this.items[this.i];
-    if (this.header) lcd.text(typeof this.header === 'string' ? this.header : this.header.textContent, 0, LINES[0]);
-    const value = modelBox(this.calc.model(it.value, {}), { digitSep: this.calc.setup.digitSep });
-    const base = Math.min(61, 62 - value.desc);
-    drawBox(lcd, value, Math.max(0, 192 - value.w), base);
+    if (it.title) lcd.text(it.title, 0, LINES[0]);
     const l = it.label;
-    if (typeof l === 'string') lcd.text(l, 0, base);
-    else {
-      let x = lcd.text(l.name === 'x' ? '𝑥' : l.name === 'y' ? '𝑦' : l.name, 0, base);
-      if (l.idx) x = lcd.text(['₀', '₁', '₂', '₃', '₄'][l.idx] ?? String(l.idx), x, base) - 5;
-      lcd.text('=', x, base);
-    }
+    lcd.text(typeof l === 'string' ? l : `${l.name}${l.idx ? '₀₁₂₃₄'[l.idx] : ''}=`, 0, LINES[it.title ? 1 : 0]);
+    const value = modelBox(this.calc.model(it.value, {}), { digitSep: this.calc.setup.digitSep });
+    drawBox(lcd, value, Math.max(0, 192 - value.w), Math.min(61, 62 - value.desc));
     return { up: this.i > 0, down: this.i < this.items.length - 1, sto: this.sto };
   }
 }
@@ -109,6 +105,76 @@ function coefGrid(calc, md, { rows, labels, onEq, onOptn, defaultValue = N.ZERO,
     onOptn,
     side: title ? () => h('div', 'side', title) : null,
   });
+}
+
+// ---------------------------------------------------------------- coefficient editors of the fx-991CE X
+// Photos of a unit and the User's Guide (p.32, ax³+bx²+cx+d>0): small-font terms in three 62-px columns.
+// A coefficient is right-aligned to its column edge E; the variable follows at E with its exponent at
+// E + 6, and the next term's sign stands at E + 13 (at x 9 for the first term of a row). A selected
+// coefficient's span (sign and value) is inverted; its full value, or the input, is on the bottom line.
+
+const edge = (v) => 51 + 62 * v;
+const signX = (v) => (v === 0 ? 9 : edge(v - 1) + 13);
+const SUP = { 2: '²', 3: '³', 4: '⁴' };
+
+/** Simultaneous equations: a brace, one equation per row (baselines 9, 21, 33, 45), three columns at a time. */
+function simulTerms(grid, md) {
+  const n = md.n;
+  grid.colTop = Math.min(Math.max(grid.colTop ?? 0, grid.c - 2), grid.c, n - 2);
+  const terms = [];
+  for (let r = 0; r < n; r++) {
+    for (let c = grid.colTop; c <= Math.min(n, grid.colTop + 2); c++) {
+      // x, y, z, t with "=" after the last unknown while the constant's column is on screen; the constant on
+      // the right keeps its own sign
+      const name = c < n ? UNKNOWNS[c] + (c === n - 1 && c < grid.colTop + 2 ? '=' : '') : '';
+      terms.push({ r, c, v: c - grid.colTop, base: 9 + 12 * r, name, signed: c > 0 && c < n });
+    }
+  }
+  return { terms, brace: grid.colTop === 0 ? [1, 10 + 12 * (n - 1)] : null };
+}
+
+/** Polynomials and inequalities: the template on top, three terms per row (baselines 23, 35). */
+function polyTerms(md, op = null) {
+  const n = md.n;
+  const terms = md.coef[0].map((_, i) => {
+    const p = n - i;
+    return { r: 0, c: i, v: i % 3, base: 23 + 12 * Math.floor(i / 3), name: p > 1 ? `x${SUP[p]}` : p === 1 ? 'x' : '', signed: i > 0 };
+  });
+  const last = terms[n];
+  const extra = [];
+  if (op) {
+    // "> 0" after the last coefficient: in the sign position, or right after it at the end of a full row
+    const x = last.v === 2 ? edge(2) : edge(last.v) + 13;
+    extra.push({ text: op, x, base: last.base }, { text: '0', x: last.v === 2 ? x + 6 : x + 10, base: last.base });
+  }
+  return { title: `${POLY_TEXT[n]}${op ? `${op}0` : ''}`, terms, extra };
+}
+
+function paintCoefficients(lcd, grid, md, layout) {
+  const S = { font: 'S' };
+  if (layout.title) lcd.text(layout.title, 0, 9, S);
+  if (layout.brace) {
+    const [top, bot] = layout.brace;
+    const mid = Math.round((top + bot) / 2);
+    lcd.vline(2, top + 1, mid - 1);
+    lcd.vline(2, mid + 1, bot - 1);
+    lcd.hline(3, 4, top);
+    lcd.hline(3, 4, bot);
+    lcd.hline(0, 1, mid);
+  }
+  for (const tm of layout.terms) {
+    const value = md.coef[tm.r][tm.c];
+    const e = edge(tm.v);
+    if (tm.signed) {
+      lcd.text(N.sign(value) < 0 ? '−' : '+', signX(tm.v), tm.base, S);
+      lcd.textRight(cellText(N.abs(value), 6), e, tm.base, S);
+    } else lcd.textRight(cellText(value, 6), e, tm.base, S);
+    if (tm.name) lcd.text(tm.name, e, tm.base, S);
+    if (grid.r === tm.r && grid.c === tm.c) lcd.invert(signX(tm.v), tm.base - 8, e - signX(tm.v), 10);
+  }
+  for (const x of layout.extra ?? []) lcd.text(x.text, x.x, x.base, S);
+  grid.paintFooter(lcd);
+  return { noMath: !grid.editor };
 }
 
 // ---------------------------------------------------------------- Equation/Func
@@ -144,7 +210,7 @@ function eqnEditor(calc) {
   const md = calc.modeData;
   const simul = md.kind === 'simul';
   const labels = simul ? [...UNKNOWNS.slice(0, md.n), '='] : ['a', 'b', 'c', 'd', 'e'].slice(0, md.n + 1);
-  return coefGrid(calc, md, {
+  const grid = coefGrid(calc, md, {
     rows: simul ? md.n : 1,
     labels,
     onOptn: () => calc.push(eqnTypeMenu(calc)),
@@ -158,6 +224,8 @@ function eqnEditor(calc) {
       }
     },
   });
+  grid.paint = (lcd) => paintCoefficients(lcd, grid, md, simul ? simulTerms(grid, md) : polyTerms(md));
+  return grid;
 }
 
 function solveSimul(calc, md) {
@@ -183,13 +251,15 @@ function solvePoly(calc, md) {
     const same = distinct.some((d) => V.isCx(d) === V.isCx(r) && (V.isCx(r) ? N.eq(d.re, r.re) && N.eq(d.im, r.im) : N.eq(d, r)));
     if (!same) distinct.push(r);
   }
-  const items = distinct.map((v, i) => ({ label: sub('x', distinct.length > 1 ? i + 1 : 0), value: v }));
+  const title = `${POLY_TEXT[md.n]}=0`;
+  const items = distinct.map((v, i) => ({ title, label: sub('x', distinct.length > 1 ? i + 1 : 0), value: v }));
   if (md.n === 2) {
-    // vertex of y = ax² + bx + c
+    // vertex of y = ax² + bx + c: "y=ax²+bx+c min" (max when a < 0)
     const [a, b, c] = coefs;
     const x = N.div(N.neg(b), N.mul(N.fromInt(2), a));
     const y = N.sub(c, N.div(N.mul(b, b), N.mul(N.fromInt(4), a)));
-    items.push({ label: sub('x'), value: x }, { label: sub('y'), value: y });
+    const vertex = `y=${POLY_TEXT[2]} ${N.sign(a) > 0 ? 'min' : 'max'}`;
+    items.push({ title: vertex, label: sub('x'), value: x }, { title: vertex, label: sub('y'), value: y });
   }
   calc.push(new SolutionScreen(calc, items));
 }
@@ -225,7 +295,7 @@ function ineqTypeMenu(calc) {
 
 function ineqEditor(calc) {
   const md = calc.modeData;
-  return coefGrid(calc, md, {
+  const grid = coefGrid(calc, md, {
     rows: 1,
     labels: ['a', 'b', 'c', 'd', 'e'].slice(0, md.n + 1),
     onOptn: () => calc.push(ineqTypeMenu(calc)),
@@ -238,6 +308,8 @@ function ineqEditor(calc) {
       }
     },
   });
+  grid.paint = (lcd) => paintCoefficients(lcd, grid, md, polyTerms(md, md.op));
+  return grid;
 }
 
 class IneqResult {
@@ -307,17 +379,24 @@ class IneqResult {
     return {};
   }
 
+  /**
+   * Outside MathI/MathO (User's Guide p.32): "a<x<b;c<x" and the letters' values below it, small font on a
+   * 12-px pitch, values right-aligned.
+   */
   paintLetters(lcd, r) {
+    const S = { font: 'S' };
     const letters = 'abcdefgh';
     const values = [];
     const name = (v) => { values.push(v); return letters[values.length - 1]; };
     const lt = (inc) => (inc ? '≤' : '<');
     const pattern = r.map((s) => (s.point ? `x=${name(s.point)}` : s.ne ? `x≠${name(s.ne)}`
-      : `${s.lo ? `${name(s.lo)}${lt(s.loInc)}` : ''}x${s.hi ? `${lt(s.hiInc)}${name(s.hi)}` : ''}`)).join(',');
-    lcd.text(pattern.replace(/x/g, '𝑥'), 0, LINES[0]);
-    values.slice(this.offset / 40, this.offset / 40 + 3).forEach((v, i) => {
-      lcd.text(`${letters[this.offset / 40 + i]}=`, 0, LINES[i + 1]);
-      lcd.textRight(modelText(this.calc.model(v, { form: 'dec' }), { decimalMark: ',' }).replace('-', '−'), 192, LINES[i + 1]);
+      : `${s.lo ? `${name(s.lo)}${lt(s.loInc)}` : ''}x${s.hi ? `${lt(s.hiInc)}${name(s.hi)}` : ''}`)).join(';');
+    lcd.text(pattern, 0, 9, S);
+    const first = this.offset / 40;
+    values.slice(first, first + 3).forEach((v, i) => {
+      const base = 21 + 12 * i;
+      lcd.text(`${letters[first + i]}=`, 0, base, S);
+      lcd.textRight(modelText(this.calc.model(v, { form: 'dec' }), { decimalMark: ',' }), 192, base, S);
     });
     return {};
   }

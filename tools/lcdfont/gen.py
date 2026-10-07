@@ -125,6 +125,8 @@ SMALL = {
     '▸': (['#..', '##.', '###', '##.', '#..'], -2),
     '<': (['...#', '..#.', '.#..', '#...', '.#..', '..#.', '...#'], -1),
     '>': (['#...', '.#..', '..#.', '...#', '..#.', '.#..', '#...'], -1),
+    '≤': (['...#', '..#.', '.#..', '#...', '.#..', '..#.', '...#', '....', '####'], 0),
+    '≥': (['#...', '.#..', '..#.', '...#', '..#.', '.#..', '#...', '....', '####'], 0),
     '%': (['##..#', '##..#', '...#.', '...#.', '..#..', '.#...', '.#...', '#..##', '#..##'], 0),
     '!': (['#'] * 6 + ['.', '#'], 0),
     '?': (['.###.', '#...#', '....#', '...#.', '..#..', '..#..', '.....', '..#..'], 0),
@@ -238,10 +240,11 @@ for ch, rows in TINY.items():
         T[ch] = g(rows, 1 if len(rows[0]) >= 4 else 2, bottom)
 S['−'] = g(['#####'], 1, -4)  # the sample was a fraction-bar fragment; a 1-pixel minus like the tiny font
 S.pop('-', None)
-# the sign of a negative number in small and tiny text is a 3-pixel dash, shorter than the subtraction
-# operator (regression "a=-852,1627746" p.23; table cells "-0,5" p.29)
+# the sign of a negative number is a dash shorter than the subtraction operator: 3 px in small and tiny
+# text (regression "a=-852,1627746" p.23; table cells "-0,5" p.29), 6 px in the main font
 S['-'] = g(['###'], 2, -4)
 T['-'] = g(['###'], 2, -3)
+L['-'] = g(['######', '######'], 3, -5)  # main font: "-0,8660254038" (p.25)
 
 # ---------------------------------------------------------------- remove stray pixels
 # Glyphs cut from screenshots can carry a piece of a fraction bar or of the next line under them. A glyph
