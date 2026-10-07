@@ -224,6 +224,8 @@ for ch, rows in TINY.items():
         if ch == ',':
             bottom = 1
         T[ch] = g(rows, 1 if len(rows[0]) >= 4 else 2, bottom)
+S['−'] = g(['#####'], 1, -4)  # the sample was a fraction-bar fragment; a 1-pixel minus like the tiny font
+S.pop('-', None)
 for f in (S, T):
     f.setdefault('-', f['−'])
 
@@ -232,6 +234,37 @@ import os
 if os.path.exists(f'{sp}/font/harvest.json'):
     for fname, gl in json.load(open(f'{sp}/font/harvest.json', encoding='utf-8')).items():
         F[fname].update(gl)
+
+# ---------------------------------------------------------------- remove stray pixels
+# Glyphs cut from screenshots can carry a piece of a fraction bar or of the next line under them. A glyph
+# made of one part keeps only its main body (the largest run of non-blank rows).
+import unicodedata
+MULTI = set('ij!?:;="%÷≥≤…¨¸ȳŷx̄•ħ') | {'x̄'}
+
+
+def multi_part(ch):
+    return ch in MULTI or any(unicodedata.combining(c) for c in unicodedata.normalize('NFD', ch))
+
+
+for fname in ('L', 'S', 'T', 'E'):
+    for ch, gl in F[fname].items():
+        if multi_part(ch) or not gl['rows']:
+            continue
+        rows = gl['rows']
+        groups, cur = [], []
+        for i, r in enumerate(rows):
+            if '#' in r:
+                cur.append(i)
+            elif cur:
+                groups.append(cur); cur = []
+        if cur:
+            groups.append(cur)
+        if len(groups) < 2:
+            continue
+        main = max(groups, key=lambda g: sum(rows[i].count('#') for i in g))
+        below = len(rows) - 1 - main[-1]
+        gl['rows'] = rows[main[0]:main[-1] + 1]
+        gl['bottom'] -= below
 
 # ---------------------------------------------------------------- status-line indicators
 # positions: LCD x of the left edge (screenshot x − 9), top row within the status line

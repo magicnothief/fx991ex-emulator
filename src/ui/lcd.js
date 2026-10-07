@@ -23,7 +23,10 @@ export function glyph(font, ch) {
       return cache.get(key);
     }
     const g = f.glyphs[ch] ?? (ch === '-' ? f.glyphs['−'] : null);
+    // a glyph missing from a small font comes from the other small font before the main one (𝑥 in exponents)
+    const near = font === 'S' ? 'T' : font === 'T' ? 'S' : null;
     if (g) cache.set(key, { x: g[0], bottom: g[1], rows: parse(g[2]) });
+    else if (near && FONTS[near].glyphs[ch]) cache.set(key, glyph(near, ch));
     else if (font !== 'L' && FONTS.L.glyphs[ch]) cache.set(key, glyph('L', ch));
     else {
       const h = f.ascent + 1;

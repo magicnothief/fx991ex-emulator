@@ -27,7 +27,9 @@ def harvest(img, font, pitch, asc, desc, items, keep=None):
             if ch == ' ' or (keep and ch not in keep):
                 continue
             cx = x0 + k * pitch
-            rows = range(max(0, base - asc), min(len(img), base + desc + 1))
+            # descender rows only for letters with descenders: below them the next line begins
+            low = desc if ch in 'gjpqy' else 0
+            rows = range(max(0, base - asc), min(len(img), base + low + 1))
             ink = [(x, y) for y in rows for x in range(cx, cx + pitch) if x < 192 and img[y][x]]
             if not ink:
                 continue

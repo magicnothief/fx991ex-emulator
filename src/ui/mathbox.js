@@ -28,23 +28,33 @@ export function row(items) {
   const w = items.reduce((s, b) => s + b.w, 0);
   const asc = Math.max(0, ...items.map((b) => b.asc));
   const desc = Math.max(0, ...items.map((b) => b.desc));
-  return box(w, asc, desc, (lcd, x, base) => {
+  const r = box(w, asc, desc, (lcd, x, base) => {
     for (const b of items) { b.draw(lcd, x, base); x += b.w; }
   }, items.map((b) => b.text).join(''));
+  r.bars = items.some((b) => b.bars); // holds a fraction bar
+  return r;
 }
 
-/** Fraction: 1-pixel bar 7 rows above the baseline, from 2 px before to 1 px after the wider part. */
+/**
+ * Fraction: 1-pixel bar 7 rows above the baseline, from 2 px before to 1 px after the wider part. When the
+ * numerator or denominator holds a fraction itself, the main bar reaches 2 px further on each side, so it is
+ * clearly the longest (stacked fractions).
+ */
 export function frac(num, den, st = STYLE.L) {
   const inner = Math.max(num.w, den.w);
-  const w = inner + 3;
+  const pad = num.bars || den.bars ? 2 : 0;
+  const w = inner + 3 + 2 * pad;
   const bar = -st.axis;
-  const numBase = bar - 1 - num.desc;
+  // one blank row on each side of the bar (the style's own descender rows do not count)
+  const numBase = bar - 2 - Math.max(0, num.desc - st.desc);
   const denBase = bar + 2 + den.asc;
-  return box(w, -(numBase - num.asc), denBase + den.desc, (lcd, x, base) => {
+  const b = box(w, -(numBase - num.asc), denBase + den.desc, (lcd, x, base) => {
     lcd.hline(x, x + w - 1, base + bar);
-    num.draw(lcd, x + 2 + Math.floor((inner - num.w) / 2), base + numBase);
-    den.draw(lcd, x + 2 + Math.floor((inner - den.w) / 2), base + denBase);
+    num.draw(lcd, x + 2 + pad + Math.floor((inner - num.w) / 2), base + numBase);
+    den.draw(lcd, x + 2 + pad + Math.floor((inner - den.w) / 2), base + denBase);
   }, `(${num.text})/(${den.text})`);
+  b.bars = true;
+  return b;
 }
 
 /** Exponent: small style with its bottom 7 rows above the baseline (higher when it holds a fraction). */
@@ -65,7 +75,7 @@ export function lowered(sub) {
 export function radical(rad, index = null) {
   const lead = Math.max(11, index ? index.w + 6 : 0); // one main-font cell before the radicand
   const w = lead + rad.w + 1;
-  return box(w, rad.asc + 3, Math.max(rad.desc, 1), (lcd, x, base) => {
+  const r = box(w, rad.asc + 3, Math.max(rad.desc, 1), (lcd, x, base) => {
     const c = x + lead; // radicand start
     const top = base - rad.asc; // radicand top row
     const bot = base + Math.max(rad.desc, 1); // lowest row of the sign
@@ -80,6 +90,8 @@ export function radical(rad, index = null) {
     if (index) index.draw(lcd, c - 5 - index.w, b - 8);
     rad.draw(lcd, c, base);
   }, `√(${rad.text})`);
+  r.bars = rad.bars;
+  return r;
 }
 
 /** Parenthesis glyph, stretched to cover asc/desc when the content is taller than a line. */
