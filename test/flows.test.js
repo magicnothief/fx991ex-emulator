@@ -214,6 +214,10 @@ test('the subtraction key works as the minus sign where a value is expected', ()
   assert.equal(result(keys(fresh(), 'MENU 2 SUB 1 ADD ENG EQ')), '-1+1i');
   const p = keys(fresh(), 'MENU NEG 2 2 1 EQ SUB 3 EQ 2 EQ EQ'); // x² − 3x + 2 = 0
   assert.equal(modelText(p.top.calc.model(p.top.items[0].value, {})), '2');
+  // the addition key as a plus sign
+  assert.equal(result(keys(fresh(), 'AC ADD 5 EQ')), '5');
+  const q = keys(fresh(), 'MENU NEG 2 2 1 EQ ADD 3 EQ 2 EQ EQ'); // x² + 3x + 2 = 0
+  assert.equal(modelText(q.top.calc.model(q.top.items[0].value, {})), '-1');
 });
 
 test('OPTN inside the vector editor: Define/Edit/Vector Calc, and functions into the cell', () => {

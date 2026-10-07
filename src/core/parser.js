@@ -265,6 +265,11 @@ class Parser {
       this.next();
       return { t: 'neg', a: this.negation() };
     }
+    // …and the addition key as a plus sign: "+ 5 =", a coefficient "+ 3"
+    if (it && it.ty === 'tok' && it.id === '+') {
+      this.next();
+      return this.negation();
+    }
     if (it && it.ty === 'tok' && it.id === 'AtWt') {
       this.next();
       return { t: 'call', fn: 'AtWt', args: [this.negation()] };

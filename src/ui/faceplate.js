@@ -9,15 +9,16 @@ const svg = (w, h, body, cls = 'ico') =>
   `<svg class="${cls}" viewBox="0 0 ${w} ${h}" style="width:${w / 10}em;height:${h / 10}em" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">${body}</svg>`;
 const fill = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="currentColor" stroke="none"/>`;
 const box = (x, y, w, h, sw = 0.9) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" stroke-width="${sw}"/>`;
-const radical = (x, h) => `<path d="M${x} ${h * 0.62} l1.3 -0.5 l2 ${h * 0.38 - 0.4} l2.6 ${-h * 0.9} h${h}"/>`;
+// √ as printed on the keys: a short hook, the check stroke down to the bottom and up, then the vinculum
+const radical = (x, h, w) => `<path d="M${x} ${h * 0.62} L${x + 1.3} ${h * 0.5} L${x + 3} ${h} L${x + 5.4} 0.6 H${x + 5.4 + w}" stroke-width="1.45" stroke-linejoin="round" stroke-linecap="round"/>`;
 
 const ICON = {
   frac: svg(8, 11, `${fill(0.6, 0.4, 6.8, 3.4)}<path d="M0 5.5 h8"/>${box(1.1, 7, 5.8, 3.5)}`),
   mixed: svg(12, 10, `${fill(0.4, 3.2, 4, 3.8)}${box(6.6, 0.5, 4.6, 3.4, 0.8)}<path d="M5.6 5.1 h6.4"/>${box(6.6, 6.2, 4.6, 3.3, 0.8)}`),
-  sqrt: svg(12, 10, `${radical(0.4, 7.2)}${fill(6.4, 3.4, 4.6, 5)}`),
-  cbrt: svg(13, 10, `<text x="0" y="4.2" font-size="4.6" fill="currentColor" stroke="none" font-family="Bahnschrift, Segoe UI, sans-serif">3</text>${radical(1.4, 7.4)}${fill(7.6, 3.6, 4.4, 4.8)}`),
-  root: svg(14, 10, `${fill(0.3, 1.2, 3, 2.6)}${radical(1.6, 7.4)}${box(8.5, 3.6, 4.4, 5, 0.9)}`),
-  powFill: svg(5, 10, fill(0.5, 0.6, 4, 3.6)),
+  sqrt: svg(12, 10, `${radical(0.5, 9.4, 5.6)}${fill(6.6, 2.4, 4.6, 5.4)}`),
+  cbrt: svg(13, 10, `<text x="0" y="4.4" font-size="4.8" font-weight="700" fill="currentColor" stroke="none" font-family="Bahnschrift, Segoe UI, sans-serif">3</text>${radical(1.4, 9.4, 5.6)}${fill(7.6, 2.4, 4.4, 5.4)}`),
+  root: svg(14, 10, `${fill(0.3, 0.8, 3, 2.6)}${radical(1.8, 9.4, 6.2)}${box(8.8, 2.4, 4.4, 5.4, 0.9)}`),
+  powFill: svg(6, 10, fill(0.4, 0.2, 5, 4.6)),
   logArgs: svg(9, 10, `${fill(0.2, 6.2, 2.8, 3.4)}${box(4, 2.2, 4.2, 7, 1)}`),
   int: svg(17, 12, `<path d="M4.6 1.6 C3.6 0, 2.6 1, 2.6 3 V9 C2.6 11, 1.6 12, 0.6 10.4" stroke-width="1.2"/>${box(5.2, 0.6, 2.6, 2.6, 0.8)}${box(5.2, 8.6, 2.6, 2.6, 0.8)}${fill(9.6, 4.6, 6.6, 3.4)}`),
   sum: svg(12, 10, `<path d="M4.6 2 H0.6 L3 5 L0.6 8 H4.6" stroke-width="0.9"/>${box(1.2, 0, 2.2, 1.4, 0.6)}${box(1.2, 8.6, 2.2, 1.4, 0.6)}${fill(6.4, 2.6, 5, 3.6)}`),
@@ -58,7 +59,7 @@ const FN_ROWS = [
   ],
   [
     ['STO', 'STO', { s: 'RECALL' }],
-    ['ENG', 'ENG', { cx: '∠ <span class="s">←</span> i' }],
+    ['ENG', 'ENG', { cx: `<span class="cbracket"><span class="s">∠</span></span><span class="s">←</span>${it('i')}` }],
     ['LP', '(', { s: 'Abs' }],
     ['RP', ')', { s: ';', a: it('x') }],
     ['SD', 'S⇔D', { s: `a<span class="lfrac"><span>b</span><span>c</span></span>⇔<span class="lfrac"><span>d</span><span>c</span></span>`, a: it('y') }],
@@ -82,7 +83,7 @@ const PAD = { x: 157, y: 364, w: 148, h: 104 };
 
 function labelsHtml(l) {
   const parts = [];
-  if (l.cx) parts.push(`<span class="cbracket">${l.cx}</span>`);
+  if (l.cx) parts.push(`<span class="cx">${l.cx}</span>`);
   if (l.s) parts.push(`<span class="s">${l.s}</span>`);
   if (l.b) parts.push(`<span class="b">${l.b}</span>`);
   if (l.a) parts.push(`<span class="a">${l.a}</span>`);

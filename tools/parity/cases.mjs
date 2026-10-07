@@ -89,6 +89,8 @@ export const SECTIONS = [
       t('− 5 = with the subtraction key (minus sign)', 'AC SUB 5 EQ', { manual: '-5' }),
       t('2 × − 3 with the subtraction key', 'AC 2 MUL SUB 3 EQ', { manual: '-6' }),
       t('Negative result: short sign (−25÷5)', 'AC NEG 2 5 DIV 5 EQ'),
+      t('+ 5 = with the addition key (plus sign)', 'AC ADD 5 EQ', { manual: '5' }),
+      t('30ʳ+50ᵍ: radian and gradian marks (OPTN 2)', 'AC 3 0 OPTN 2 2 ADD 5 0 OPTN 2 3 EQ', { manual: '1763.873385' }),
     ],
   },
   {
@@ -498,6 +500,7 @@ export const SECTIONS = [
       t('x²+50x+2=0: x₁ (title and label)', 'MENU NEG 2 2 1 EQ 5 0 EQ 2 EQ EQ', { manual: '-25+√623' }),
       t('x²+50x+2=0: minimum y', 'MENU NEG 2 2 1 EQ 5 0 EQ 2 EQ EQ EQ EQ EQ', { manual: '-623' }),
       t('Coefficient typed with the subtraction key: x²−3x+2', 'MENU NEG 2 2 1 EQ SUB 3 EQ 2 EQ EQ', { manual: 'x₁=2' }),
+      t('Coefficient typed with the addition key: x²+3x+2', 'MENU NEG 2 2 1 EQ ADD 3 EQ 2 EQ EQ', { manual: 'x₁=-1' }),
     ],
   },
   {

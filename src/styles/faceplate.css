@@ -96,10 +96,25 @@ html, body {
 .labels .w { color: #ececec; }
 .labels .only { margin: 0 auto; }
 .round-label { justify-content: center; font-weight: 700; font-size: 14px; }
-.labels .bracket { color: var(--alpha); border: 1.6px solid var(--basen); border-bottom: none; padding: 0 3px; line-height: .95; }
-.labels .cbracket { color: var(--cmplx); border: 1.6px solid var(--cmplx); border-bottom: none; padding: 0 3px; line-height: .95; display: inline-flex; gap: 4px; }
+/* ALPHA letters A–F and the complex-mode ∠ hang from corner brackets: ┌A┐ (blue) and ┌∠┐ (purple) */
+.labels .bracket, .labels .cbracket {
+  --c: var(--basen);
+  color: var(--alpha);
+  padding: 2px 6px 0;
+  margin-bottom: -2px; /* the legs reach down to the key */
+  line-height: 1;
+  background:
+    linear-gradient(var(--c), var(--c)) left top / 1.8px 100% no-repeat,
+    linear-gradient(var(--c), var(--c)) right top / 1.8px 100% no-repeat,
+    linear-gradient(var(--c), var(--c)) left top / 3.5px 1.8px no-repeat,
+    linear-gradient(var(--c), var(--c)) right top / 3.5px 1.8px no-repeat;
+}
+.labels .cbracket { --c: var(--cmplx); }
+.labels .cx { color: var(--cmplx); display: inline-flex; align-items: flex-end; gap: 2px; }
+.labels .cx .it { font-size: 1.15em; }
 .labels sup { font-size: .7em; vertical-align: .45em; line-height: 0; }
-.labels .it, .key .it { font-family: var(--math-font); font-style: italic; }
+/* the variable x, e, i as printed on the keys: a bold serif italic */
+.labels .it, .key .it { font-family: "Times New Roman", Times, serif; font-style: italic; font-weight: 700; }
 .lfrac { display: inline-flex; flex-direction: column; align-items: center; font-size: .72em; line-height: .9; vertical-align: middle; }
 .lfrac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 1px; }
 
@@ -118,8 +133,9 @@ html, body {
 .key.blue { color: #ffffff; background: var(--bluekey); border: 2px solid var(--bluekey-edge); border-radius: 8px 8px 11px 11px; font-size: 30px; font-weight: 700; }
 .key:active, .key.pressed { filter: brightness(.8); }
 .key.num:active, .key.num.pressed { filter: brightness(.86); }
-.key .it { font-weight: 600; font-size: 1.12em; }
-.key sup { font-size: .58em; vertical-align: .62em; line-height: 0; margin-left: 1px; }
+.key .it { font-size: 1.35em; }
+.key sup { font-size: .6em; position: relative; top: -.62em; line-height: 0; margin-left: 1px; } /* keys are flex boxes: no vertical-align */
+.key[data-key="DMS"] { font-size: 25px; letter-spacing: 1px; }
 .key[data-key="EXP"] { font-size: 28px; }
 .key[data-key="ANS"] { font-size: 28px; }
 /* operators and the decimal comma as large as the digits (readable from the back of a classroom) */

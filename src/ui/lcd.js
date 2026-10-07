@@ -63,7 +63,8 @@ const plain = (text) => String(text).replace(/_/g, '');
 const INVERSE = { x: 0, bottom: -5, rows: ['.......##.', '......###.', '.......##.', '#####..##.', '.......##.', '.......##.', '......####'] };
 
 // superscript and subscript characters, drawn raised or lowered with a smaller font
-const SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '−', 'ˣ': 'x' };
+// (ʳ and ᵍ are the radian and gradian marks: a small raised r and g, like ° at the top of the line)
+const SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '−', 'ˣ': 'x', 'ʳ': 'r', 'ᵍ': 'g' };
 const SUB = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9', 'ₚ': 'p' };
 const subscript = (ch) => SUB[ch] ?? (ch.length > 1 && ch[0] === '_' ? ch.slice(1) : undefined);
 
