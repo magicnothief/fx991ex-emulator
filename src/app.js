@@ -4,9 +4,13 @@ import { MODES } from './calc/modes/index.js';
 import { buildKeypad, KEYBOARD, KEYBOARD_HELP } from './ui/faceplate.js';
 import { renderFrame } from './ui/view.js';
 
-const lcd = document.getElementById('lcd');
-const statusEl = document.getElementById('status');
-const screenEl = document.getElementById('screen');
+const dom = {
+  lcd: document.getElementById('lcd'),
+  canvas: document.getElementById('lcd-canvas'),
+  status: document.getElementById('status'),
+  screen: document.getElementById('screen'),
+};
+let shownText = '';
 const toast = document.getElementById('toast');
 
 function storage() {
@@ -20,13 +24,14 @@ function storage() {
 
 let blink;
 function render() {
-  renderFrame(calc, lcd, statusEl, screenEl);
+  shownText = renderFrame(calc, dom, true);
   // the cursor blinks like the real LCD; restart the phase after every key
   clearInterval(blink);
   let on = true;
   blink = setInterval(() => {
     on = !on;
-    for (const c of screenEl.querySelectorAll('.cursor')) c.classList.toggle('blink-off', !on);
+    if (calc.top?.paint) renderFrame(calc, dom, on);
+    else for (const c of dom.screen.querySelectorAll('.cursor')) c.classList.toggle('blink-off', !on);
   }, 500);
 }
 
@@ -41,6 +46,7 @@ function press(key) {
 // used by the screenshot and parity-sheet harness (electron/main.cjs, tools/parity)
 window.fx = {
   press,
+  text: () => shownText,
   reset() {
     calc.resetAll();
     render();
@@ -85,10 +91,9 @@ function showToast(text, action) {
 }
 
 function resultText() {
-  const s = calc.top;
-  if (!s.result) return null;
-  const sel = screenEl.querySelector('.result-area');
-  return sel ? sel.textContent.trim() : null;
+  if (!calc.top.result) return null;
+  const lines = shownText.split(/\n/);
+  return lines[lines.length - 1].trim() || null;
 }
 
 if (window.host) {

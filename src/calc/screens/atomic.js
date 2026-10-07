@@ -80,6 +80,26 @@ class PeriodicTable {
     const panel = h('div', 'pt-info', h('div', 'pt-z', info[0]), h('div', 'pt-sym', info[1]), h('div', 'pt-w', info[2]));
     return { el: h('div', 'ptable-screen', table, panel), status: { noMath: true } };
   }
+
+  /** Cells of 6×5 pixels (18 groups, the two series rows below), the selected cell filled; Z, symbol, weight right. */
+  paint(lcd) {
+    const sel = CELLS.get(key(this.row, this.col));
+    const cx = (col) => 1 + (col - 1) * 6;
+    const cy = (row) => 1 + (row - 1) * 5 + (row >= 8 ? 3 : 0);
+    for (const [k, cell] of CELLS) {
+      const [row, col] = k.split(',').map(Number);
+      if (cell === sel) lcd.fill(cx(col), cy(row), 7, 6);
+      else lcd.frame(cx(col), cy(row), 7, 6);
+    }
+    for (const sr of SERIES) lcd.text(sr.letter, cx(2) - 1, cy(sr.labelRow) + 5, { font: 'T' });
+    const info = sel.z
+      ? [String(sel.z), sel.symbol, sel.bracket ? `[${sel.weight}]` : sel.weight.replace('.', ',')]
+      : [sel.range, t(sel.name), ''];
+    lcd.textRight(info[0], 192, 14);
+    lcd.textRight(info[1], 192, 30);
+    if (info[2]) lcd.textRight(info[2], 192, 46, { font: 'S' });
+    return { noMath: true };
+  }
 }
 
 export function atomicMenu(calc, apply) {

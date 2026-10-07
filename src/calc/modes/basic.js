@@ -8,6 +8,7 @@ import { GridScreen } from '../screens/grid.js';
 import { Menu, page, item, closeMenus } from '../screens/common.js';
 import { commonOptnPage } from '../screens/menus.js';
 import { t } from '../i18n.js';
+import { LINES } from '../../ui/lcd.js';
 
 const tokItem = (screen, label, id) => item(label, (calc) => { closeMenus(calc); screen.apply(`tok:${id}`); });
 
@@ -68,6 +69,8 @@ class SizePrompt {
   view() {
     return { el: h('div', 'menu', this.lines.map((l) => h('div', 'item', t(l)))) };
   }
+
+  paint(lcd) { this.lines.forEach((l, i) => lcd.text(t(l), 0, LINES[i])); }
 }
 
 function arrayMode(kind) {

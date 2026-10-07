@@ -3,6 +3,7 @@ import { h } from '../../ui/render.js';
 import { MENU_KEY } from '../keymap.js';
 import { MENU_KEYS } from '../../core/constants.js';
 import { t } from '../i18n.js';
+import { LINES, SMALL_LINES, scrollbar } from '../../ui/lcd.js';
 
 /** Scrollbar of a paged screen: the track is split into one equal segment per page. */
 export function pageBar(page, pages) {
@@ -77,6 +78,24 @@ export class Menu {
     if (this.pages.length > 1) el.append(pageBar(this.page, this.pages.length));
     return { el, status: { sub: this.sub } };
   }
+
+  /** Main-font menus: four lines (pitch 16); small-font pages: six lines (pitch 10) in 1–3 columns. */
+  paint(lcd) {
+    const page = this.pages[this.page];
+    const cols = page.cols || 1;
+    const small = page.small || Math.ceil(page.items.length / cols) + (this.title ? 1 : 0) > 4;
+    const font = small ? 'S' : 'L';
+    const lines = small ? SMALL_LINES : LINES;
+    const colW = Math.floor(192 / cols);
+    let line = 0;
+    if (this.title) lcd.text(t(this.title), 0, lines[line++], { font });
+    page.items.forEach((it, i) => {
+      const r = line + Math.floor(i / cols), c = i % cols;
+      if (r < lines.length) lcd.text(`${MENU_KEYS[i]}:${t(it.label)}`, c * colW, lines[r], { font });
+    });
+    scrollbar(lcd, this.page, this.pages.length);
+    return { sub: this.sub };
+  }
 }
 
 /** Closes all menus on top of the stack. */
@@ -107,6 +126,10 @@ export class Message {
   view() {
     return { el: h('div', 'message', this.lines.map((l) => h('div', null, t(l)))) };
   }
+
+  paint(lcd) {
+    this.lines.forEach((l, i) => { if (i < 4) lcd.text(t(l), 0, LINES[i]); });
+  }
 }
 
 /** Error screen: AC cancels, ◀/▶ go back to the input at the error position. */
@@ -129,6 +152,13 @@ export class ErrorScreen {
     const goto = this.onGoto ? h('div', null, t('[◀][▶]:Goto')) : null;
     return { el: h('div', 'message', h('div', 'big', t(this.kind)), h('div', null, ' '), h('div', null, t('[AC] :Cancel')), goto) };
   }
+
+  /** "Math ERROR" on the first line, [AC] and [◀][▶] on the third and fourth (User's Guide). */
+  paint(lcd) {
+    lcd.text(t(this.kind), 0, LINES[0]);
+    lcd.text(t('[AC] :Cancel'), 0, LINES[2]);
+    if (this.onGoto) lcd.text(t('[◀][▶]:Goto'), 0, LINES[3]);
+  }
 }
 
 /** "Yes:[=]  Cancel:[AC]" confirmation. */
@@ -147,6 +177,12 @@ export class Confirm {
 
   view() {
     return { el: h('div', 'message', h('div', null, t(this.question)), h('div', null, ' '), h('div', null, t('Yes   :[=]')), h('div', null, t('Cancel:[AC]'))) };
+  }
+
+  paint(lcd) {
+    lcd.text(t(this.question), 0, LINES[0]);
+    lcd.text(t('Yes   :[=]'), 0, LINES[2]);
+    lcd.text(t('Cancel:[AC]'), 0, LINES[3]);
   }
 }
 
@@ -171,5 +207,9 @@ export class DigitPrompt {
 
   view() {
     return { el: h('div', 'menu', h('div', 'item', t(this.text))) };
+  }
+
+  paint(lcd) {
+    lcd.text(t(this.text), 0, LINES[0]);
   }
 }

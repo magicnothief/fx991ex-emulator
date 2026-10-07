@@ -8,6 +8,9 @@ import { h, renderNodes, renderModel } from '../../ui/render.js';
 import { ErrorScreen, pageBar } from './common.js';
 import { LINE_TEMPLATE } from './calcscreen.js';
 import { t } from '../i18n.js';
+import { modelText } from '../../core/format.js';
+import { LINES, SMALL_LINES, scrollbar } from '../../ui/lcd.js';
+import { editorBox, drawBox } from '../../ui/mathbox.js';
 
 /**
  * opts: { title, params: [{ key, label }], values: { key: Num }, onEq(), onAC(), onOptn() }
@@ -97,6 +100,26 @@ export class ParamScreen {
     });
     return { el, status: { noMath: true } };
   }
+
+  /** Main-font lines "x    :0"; the selected line is inverted, the input shows in place of the value. */
+  paint(lcd) {
+    const { title, params, values } = this.opts;
+    let line = 0;
+    if (title) lcd.text(t(title), 0, LINES[line++]);
+    params.slice(this.top, this.top + this.visible).forEach((p, j) => {
+      const idx = this.top + j;
+      const base = LINES[line + j];
+      const label = `${t(p.label, this.opts.ctx).padEnd(5, ' ')}:`;
+      const x = lcd.text(label, 0, base);
+      if (idx === this.i && this.editor) {
+        drawBox(lcd, editorBox(this.editor.root, { math: false, cursor: this.editor.cursor(), cursorState: {} }), x, base);
+      } else {
+        lcd.text(modelText(this.calc.model(values[p.key], { form: 'dec' }), { decimalMark: ',' }).replace('-', '−'), x, base);
+      }
+      if (idx === this.i) lcd.invert(0, base - 12, 192, 14);
+    });
+    return { noMath: true };
+  }
 }
 
 /** A scrollable list of "label = value" rows. rows: [{ label, value }] */
@@ -153,5 +176,34 @@ export class ListScreen {
       el.append(bar);
     }
     return { el, status: { noMath: true } };
+  }
+
+  /** "label =value" rows: six small-font lines (statistics) or four main-font lines; page scrollbar. */
+  paint(lcd) {
+    const vis = this.visible;
+    const font = this.dense ? 'S' : 'L';
+    const lines = this.dense ? SMALL_LINES : LINES;
+    const pitch = this.dense ? 6 : 11;
+    let line = 0;
+    if (this.title) lcd.text(t(this.title), 0, lines[line++], { font });
+    const labelCells = this.dense ? 6 : 4;
+    for (const r of this.rows.slice(this.top, this.top + vis)) {
+      let v;
+      try {
+        v = typeof r.value === 'function' ? r.value() : r.value;
+      } catch (e) {
+        if (!(e instanceof CalcError)) throw e;
+        v = null;
+      }
+      const val = v == null ? 'ERROR' : typeof v === 'string' ? v : modelText(this.calc.model(v, { form: 'dec' }), { decimalMark: ',' }).replace('-', '−');
+      const base = lines[line++];
+      lcd.text(String(r.label).trim(), 0, base, { font });
+      lcd.text(`=${val}`, labelCells * pitch, base, { font });
+    }
+    if (this.rows.length > vis) {
+      if (this.dense) scrollbar(lcd, this.top / vis, Math.ceil(this.rows.length / vis));
+      else scrollbar(lcd, this.top, this.rows.length - vis + 1);
+    }
+    return { noMath: true };
   }
 }

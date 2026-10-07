@@ -3,12 +3,15 @@ import { Editor, tok, tpl } from '../../core/editor.js';
 import { parseStatements, parseEquation, variablesOf } from '../../core/parser.js';
 import { evaluate, evalAt } from '../../core/evaluator.js';
 import { CalcError, ERR } from '../../core/errors.js';
-import { engExponent, factModel, hasAlternateForm, formatReal } from '../../core/format.js';
+import { engExponent, factModel, hasAlternateForm, formatReal, modelText } from '../../core/format.js';
+import { tokenInfo } from '../../core/tokens.js';
 import { factorize } from '../../core/rational.js';
 import { solveNewton } from '../../core/numerics.js';
 import * as N from '../../core/num.js';
 import * as V from '../../core/values.js';
 import { h, renderNodes, renderModel } from '../../ui/render.js';
+import { LCD, chars, LINES, SMALL_LINES } from '../../ui/lcd.js';
+import { editorBox, modelBox, textBox, row, drawBox } from '../../ui/mathbox.js';
 import { VARIABLE_KEYS } from '../keymap.js';
 import { ErrorScreen } from './common.js';
 import { atomicMenu } from './atomic.js';
@@ -426,6 +429,53 @@ export class CalcScreen {
     return { el, status, after: () => keepCursorVisible(exprArea) };
   }
 
+  /** Pixel display: input from the top-left, result right-aligned on the bottom line (rows 49–61). */
+  paint(lcd) {
+    const math = this.math;
+    const cursorState = { overwrite: !math && this.editor.overwrite, block: this.editor.remaining() <= 10 };
+    const cursor = this.phase === 'input' ? this.editor.cursor() : null;
+    if (math) {
+      const parts = [editorBox(this.editor.root, { math, cursor, cursorState })];
+      if (this.result?.label) parts.push(textBox(this.result.label));
+      const expr = row(parts);
+      this.scrollX = scrollFor(expr, this.scrollX ?? 0, lcd);
+      const base = 1 + expr.asc;
+      drawBox(lcd, expr, -this.scrollX, base);
+      if (this.scrollX > 0) lcd.status.left = true;
+      if (expr.w - this.scrollX > 191) lcd.status.right = true;
+    } else {
+      paintLine(lcd, this.editor.root, cursor, cursorState, this.result?.label);
+    }
+    if (this.phase === 'result' && this.result) this.paintResult(lcd);
+    return {
+      disp: this.phase === 'result' && this.stmts && this.stmtIdx < this.stmts.length - 1,
+      up: this.history.length > 0 && (this.hist < 0 ? this.history.length > (this.phase === 'result' ? 1 : 0) : this.hist > 0),
+      down: this.hist >= 0 && this.hist < this.history.length - 1,
+      sto: this.stoPending,
+    };
+  }
+
+  paintResult(lcd) {
+    const { value, view } = this.result;
+    const opts = { line: !this.math, digitSep: this.calc.setup.digitSep };
+    const result = (b) => {
+      const base = Math.min(61, 62 - b.desc);
+      drawBox(lcd, b, Math.max(0, 192 - b.w), base);
+    };
+    const model = (m) => (this.math ? modelBox(m, opts) : textBox(modelText(m, { decimalMark: ',', digitSep: opts.digitSep })));
+    if (value.pair) {
+      result(row(value.labels.flatMap((l, i) => [i ? textBox('; ') : null, textBox(l === 'x' || l === 'y' ? (l === 'x' ? '𝑥' : '𝑦') : l), textBox('='), model(this.calc.model(value.values[i], view))])));
+      return;
+    }
+    if (V.isMat(value) || V.isVec(value)) { result(textBox(V.isMat(value) ? 'MatAns' : 'VctAns')); return; }
+    if (this.calc.mode === 'base') {
+      const lines = baseLines(value, this.calc.modeData.base || 'dec');
+      lines.forEach((l, i) => lcd.textRight(l, 192, 61 - (lines.length - 1 - i) * 13));
+      return;
+    }
+    result(model(this.resultModel()));
+  }
+
   resultView() {
     const { value, view } = this.result;
     const line = !this.math;
@@ -469,6 +519,61 @@ function keepCursorVisible(area) {
   const cr = cur.getBoundingClientRect();
   if (cr.right > ar.right) area.scrollLeft += cr.right - ar.right + 4;
   else if (cr.left < ar.left) area.scrollLeft -= ar.left - cr.left + 4;
+}
+
+/** Horizontal scroll that keeps the cursor inside the 191 visible columns. */
+function scrollFor(box, scroll, lcd) {
+  if (box.w <= 191) return 0;
+  const probe = new LCD();
+  let cx = null;
+  probe.cursorOn = true;
+  const vline = probe.vline.bind(probe);
+  probe.vline = (x, y0, y1) => { if (cx == null) cx = x; vline(x, y0, y1); };
+  box.draw(probe, 0, 30);
+  if (cx == null) return Math.min(scroll, box.w - 191);
+  if (cx - scroll > 185) return cx - 185;
+  if (cx - scroll < 6) return Math.max(0, cx - 6);
+  return scroll;
+}
+
+/** Line input: 17 characters per line from the top; overwrite mode underlines the character it replaces. */
+function paintLine(lcd, nodes, cursor, cursorState, label) {
+  const glyphs = [];
+  nodes.forEach((nd) => glyphs.push(...chars(tokenInfo(nd.id).text)));
+  const cursorAt = cursor && cursor.slot === nodes ? glyphIndex(nodes, cursor.idx) : -1;
+  if (label) glyphs.push(...chars(label));
+  const per = 17;
+  const lines = Math.max(1, Math.ceil((glyphs.length + (cursorAt === glyphs.length ? 1 : 0)) / per));
+  const first = Math.max(0, lines - 3) * per; // the last three lines stay visible
+  for (let i = first; i < glyphs.length; i++) {
+    const k = i - first;
+    lcd.glyph(glyphs[i], (k % per) * 11, 12 + Math.floor(k / per) * 13);
+  }
+  lcd.note(glyphs.join(''), 0, 12);
+  if (cursorAt >= first && lcd.cursorOn) {
+    const k = cursorAt - first;
+    const x = (k % per) * 11, base = 12 + Math.floor(k / per) * 13;
+    if (cursorState.overwrite && cursorAt < glyphs.length) lcd.hline(x, x + 9, base + 1);
+    else if (cursorState.block) lcd.fill(x, base - 11, 10, 13);
+    else lcd.vline(x, base - 11, base + 1);
+  }
+}
+
+function glyphIndex(nodes, idx) {
+  let n = 0;
+  for (let i = 0; i < idx; i++) n += chars(tokenInfo(nodes[i].id).text).length;
+  return n;
+}
+
+function baseLines(value, base) {
+  const n = BigInt(value.d.toFixed(0));
+  const u = n < 0n ? n + 0x100000000n : n;
+  if (base === 'dec') return [n.toString()];
+  if (base === 'hex') return [u.toString(16).toUpperCase().padStart(8, '0')];
+  if (base === 'oct') return [u.toString(8).padStart(11, '0')];
+  // BIN: 32 bits as two lines of 16 digits (16 cells fit the 192-pixel line)
+  const b = u.toString(2).padStart(32, '0');
+  return [b.slice(0, 16), b.slice(16)];
 }
 
 /** Base-N result display: two's complement for HEX/BIN/OCT; BIN as two 16-bit lines. */
@@ -520,6 +625,18 @@ export class RecallScreen {
     el.style.setProperty('font-size', 'calc(var(--lp) * 7.6)');
     return { el };
   }
+
+  /** RECALL: the variables in two small-font columns. */
+  paint(lcd) {
+    const setup = { ...this.calc.setup, numFormat: { mode: 'norm', digits: 1 } };
+    const model = (v) => (V.isCx(v) ? this.calc.complexModel(v) : formatReal(v, setup, {}));
+    const names = ['A', 'B', 'C', 'D', 'E', 'F', 'M', 'x', 'y'];
+    names.forEach((n, i) => {
+      const v = this.calc.mem.vars[n] ?? N.ZERO;
+      const label = n === 'x' ? '𝑥' : n === 'y' ? '𝑦' : n;
+      lcd.text(`${label}=${modelText(model(v), { decimalMark: ',' }).replace('-', '−')}`, (i % 2) * 97, SMALL_LINES[Math.floor(i / 2)], { font: 'S' });
+    });
+  }
 }
 
 // ---------------------------------------------------------------- CALC prompt
@@ -568,6 +685,8 @@ class VarPrompt {
     el.append(promptLine(this.calc, this.vars[this.i], this.editor));
     return { el };
   }
+
+  paint(lcd) { paintPrompt(lcd, this.calc, this.screen, this.vars[this.i], this.editor); }
 }
 
 /** Shared value-entry handling for prompts: digits and functions go into a line editor. */
@@ -587,6 +706,22 @@ function inputInto(prompt, ev) {
     else ed.insert(id);
   }
   return true;
+}
+
+/** CALC/SOLVE prompt: the expression on top, "A=" with the value (highlighted) or the input on the bottom line. */
+function paintPrompt(lcd, calc, screen, name, editor) {
+  const expr = editorBox(screen.editor.root, { math: screen.math, cursor: null });
+  drawBox(lcd, expr, 0, 1 + expr.asc);
+  const label = name === 'x' ? '𝑥' : name === 'y' ? '𝑦' : name;
+  const x = lcd.text(`${label}=`, 0, 61);
+  if (editor) {
+    drawBox(lcd, editorBox(editor.root, { math: false, cursor: editor.cursor(), cursorState: {} }), x, 61);
+  } else {
+    const v = calc.mem.vars[name] ?? N.ZERO;
+    const b = textBox(modelText(calc.model(v, { form: 'dec' }), { decimalMark: ',' }).replace('-', '−'));
+    drawBox(lcd, b, 192 - b.w, 61);
+    lcd.invert(192 - b.w, 49, b.w, 14);
+  }
 }
 
 function promptLine(calc, name, editor) {
@@ -673,6 +808,8 @@ class SolvePrompt {
     el.append(promptLine(this.calc, this.eqn.vars[this.i], this.editor));
     return { el };
   }
+
+  paint(lcd) { paintPrompt(lcd, this.calc, this.screen, this.eqn.vars[this.i], this.editor); }
 }
 
 class SolveResult {
@@ -705,6 +842,20 @@ class SolveResult {
     kv.append(row('L−R=', this.calc.model(this.residual, { form: 'dec' })));
     el.append(kv);
     return { el };
+  }
+
+  /** The equation on top, "x=" and "L−R=" on the last two lines with the values right-aligned. */
+  paint(lcd) {
+    const screen = this.prompt.screen;
+    const expr = editorBox(screen.editor.root, { math: screen.math, cursor: null });
+    drawBox(lcd, expr, 0, 1 + expr.asc);
+    const line = (label, value, base) => {
+      lcd.text(label, 0, base);
+      const b = modelBox(this.calc.model(value, { form: 'dec' }), {});
+      drawBox(lcd, b, Math.max(0, 192 - b.w), base);
+    };
+    line(`${this.name === 'x' ? '𝑥' : this.name}=`, this.x, LINES[2]);
+    line('L−R=', this.residual, LINES[3]);
   }
 }
 

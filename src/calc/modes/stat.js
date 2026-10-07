@@ -196,6 +196,7 @@ class DistRoot {
   }
 
   view() { return { el: h('div', 'message'), status: { noMath: true } }; }
+  paint() { return { noMath: true }; }
 }
 
 function distTypeMenu(calc, sub = false) {

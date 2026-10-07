@@ -2,6 +2,7 @@
 import * as N from '../core/num.js';
 import * as V from '../core/values.js';
 import { h } from './render.js';
+import { LCD, present } from './lcd.js';
 
 const BASE_LABEL = { dec: 'Dec', hex: 'Hex', bin: 'Bin', oct: 'Oct' };
 
@@ -29,16 +30,64 @@ function statusBar(calc, st) {
   return items;
 }
 
-export function renderFrame(calc, lcd, statusEl, screenEl) {
+const pixels = new LCD();
+
+/** Status line on the pixel display: indicator bitmaps at their fixed positions. */
+function paintStatus(lcd, calc, st) {
+  const s = calc.setup;
+  if (st.only) { // MENU: only the scroll arrows
+    if (st.down) lcd.icon('down');
+    if (st.up) lcd.icon('up');
+    return;
+  }
+  if (calc.shift) lcd.icon('S');
+  else if (calc.alpha) lcd.icon('A');
+  const m = calc.mem.vars.M;
+  if (m && !(V.isReal(m) && N.isZero(m))) lcd.icon('M');
+  if (st.sto) lcd.icon('STO');
+  if ((s.io === 'mm' || s.io === 'md') && !st.noMath) lcd.icon('math');
+  lcd.icon({ deg: 'D', rad: 'R', gra: 'G' }[s.angle]);
+  if (s.numFormat.mode === 'fix') lcd.icon('FIX');
+  if (s.numFormat.mode === 'sci') lcd.icon('SCI');
+  if (s.engSymbol) lcd.icon('eng');
+  if (calc.mode === 'cmplx' || calc.mode === 'eqn') lcd.icon('cmplx');
+  if (st.disp) lcd.icon('Disp');
+  if (st.sub || st.left) lcd.icon('left');
+  if (st.down) lcd.icon('down');
+  if (st.up) lcd.icon('up');
+}
+
+/**
+ * Draws the top screen. Screens with paint(lcd) use the pixel display (canvas); the others still render
+ * as HTML. dom: { lcd, canvas, status, screen }. Returns the plain text shown (for copying and tests).
+ */
+export function renderFrame(calc, dom, cursorOn = true) {
+  const { lcd, canvas, status: statusEl, screen: screenEl } = dom;
   lcd.classList.toggle('off', !calc.power);
   const contrast = calc.setup.contrast ?? 5;
-  lcd.style.setProperty('--ink', `rgba(27, 29, 22, ${0.45 + contrast * 0.06})`);
-  if (!calc.power) return null;
-  const { el, status = {}, after } = calc.top.view();
+  const ink = `rgba(20, 22, 18, ${0.5 + contrast * 0.05})`;
+  lcd.style.setProperty('--ink', ink);
+  if (!calc.power) { canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); return ''; }
+  const top = calc.top;
+  if (top.paint) {
+    pixels.clear();
+    pixels.cursorOn = cursorOn;
+    const st = top.paint(pixels) ?? {};
+    if (!st.bare) paintStatus(pixels, calc, { ...st, ...pixels.status });
+    present(pixels, canvas, ink);
+    canvas.hidden = false;
+    statusEl.hidden = true;
+    screenEl.hidden = true;
+    return pixels.describe();
+  }
+  canvas.hidden = true;
+  statusEl.hidden = false;
+  screenEl.hidden = false;
+  const { el, status = {}, after } = top.view();
   // MENU uses the whole display: its icons fill the rows where other screens show indicators
   lcd.classList.toggle('bare', !!status.bare);
   statusEl.replaceChildren(...(status.bare ? [] : statusBar(calc, status)));
   screenEl.replaceChildren(el);
   after?.();
-  return el;
+  return el.textContent;
 }

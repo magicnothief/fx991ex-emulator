@@ -1,6 +1,11 @@
 // Evaluated inside the emulator page by the parity harness: reads the LCD as plain text.
 // Natural Display layouts become linear text: fractions a/b, powers ^(…), roots √(…).
 (() => {
+  // pixel display: the text the screen drew, line by line
+  const canvas = document.getElementById('lcd-canvas');
+  if (canvas && !canvas.hidden && window.fx?.text) {
+    return window.fx.text().split(/\n/).map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean).join(String.fromCharCode(10));
+  }
   const simple = (s) => /^[-−]?[\w.πθ√∠]+$/.test(s);
   const wrap = (s) => (simple(s) ? s : `(${s})`);
   const text = (n) => {

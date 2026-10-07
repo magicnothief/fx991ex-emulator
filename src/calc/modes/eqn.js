@@ -9,12 +9,16 @@ import { GridScreen, cellText } from '../screens/grid.js';
 import { Menu, Message, page, item, closeMenus, ErrorScreen } from '../screens/common.js';
 import { VARIABLE_KEYS } from '../keymap.js';
 import { t } from '../i18n.js';
+import { LINES } from '../../ui/lcd.js';
+import { modelBox, textBox, row, drawBox } from '../../ui/mathbox.js';
+import { modelText } from '../../core/format.js';
 
 /** Blank bottom screen; OPTN reopens the mode's type menu. */
 class Root {
   constructor(calc, optn) { this.calc = calc; this.optn = optn; }
   handle(ev) { if (ev.action !== 'optn') return false; this.calc.push(this.optn()); return true; }
   view() { return { el: h('div', 'message'), status: { noMath: true } }; }
+  paint() { return { noMath: true }; }
 }
 
 class Prompt {
@@ -27,6 +31,7 @@ class Prompt {
     return true;
   }
   view() { return { el: h('div', 'menu', this.lines.map((l) => h('div', 'item', t(l)))) }; }
+  paint(lcd) { this.lines.forEach((l, i) => lcd.text(t(l), 0, LINES[i])); }
 }
 
 /** Shows labelled results one at a time; = / ▼ advance, ▲ goes back, STO assigns to a variable. */
@@ -66,6 +71,23 @@ class SolutionScreen {
     row.style.alignItems = 'center';
     el.append(row);
     return { el, status: { up: this.i > 0, down: this.i < this.items.length - 1, sto: this.sto } };
+  }
+
+  /** "x₁=" on the left of the bottom line and the value right-aligned; an optional header line on top. */
+  paint(lcd) {
+    const it = this.items[this.i];
+    if (this.header) lcd.text(typeof this.header === 'string' ? this.header : this.header.textContent, 0, LINES[0]);
+    const value = modelBox(this.calc.model(it.value, {}), { digitSep: this.calc.setup.digitSep });
+    const base = Math.min(61, 62 - value.desc);
+    drawBox(lcd, value, Math.max(0, 192 - value.w), base);
+    const l = it.label;
+    if (typeof l === 'string') lcd.text(l, 0, base);
+    else {
+      let x = lcd.text(l.name === 'x' ? '𝑥' : l.name === 'y' ? '𝑦' : l.name, 0, base);
+      if (l.idx) x = lcd.text(['₀', '₁', '₂', '₃', '₄'][l.idx] ?? String(l.idx), x, base) - 5;
+      lcd.text('=', x, base);
+    }
+    return { up: this.i > 0, down: this.i < this.items.length - 1, sto: this.sto };
   }
 }
 
@@ -261,6 +283,45 @@ class IneqResult {
     return { el: h('div', null, area) };
   }
 
+  /** The solution as one line under the input row; ◀▶ scroll long solutions. */
+  paint(lcd) {
+    const r = this.result;
+    if (r === 'all' || r === 'none') { lcd.text(t(r === 'all' ? 'All Real Numbers' : 'No Solution'), 0, LINES[0]); return {}; }
+    if (this.calc.setup.io !== 'mm') return this.paintLetters(lcd, r);
+    const m = (v) => modelBox(this.calc.model(v, {}), {});
+    const x = textBox('𝑥');
+    const lt = (inc) => textBox(inc ? '≤' : '<');
+    const parts = [];
+    r.forEach((s, i) => {
+      if (i) parts.push(textBox(';'));
+      if (s.point) parts.push(x, textBox('='), m(s.point));
+      else if (s.ne) parts.push(x, textBox('≠'), m(s.ne));
+      else {
+        if (s.lo) parts.push(m(s.lo), lt(s.loInc));
+        parts.push(x);
+        if (s.hi) parts.push(lt(s.hiInc), m(s.hi));
+      }
+    });
+    const line = row(parts);
+    drawBox(lcd, line, 1 - this.offset, Math.max(28, 17 + line.asc));
+    return {};
+  }
+
+  paintLetters(lcd, r) {
+    const letters = 'abcdefgh';
+    const values = [];
+    const name = (v) => { values.push(v); return letters[values.length - 1]; };
+    const lt = (inc) => (inc ? '≤' : '<');
+    const pattern = r.map((s) => (s.point ? `x=${name(s.point)}` : s.ne ? `x≠${name(s.ne)}`
+      : `${s.lo ? `${name(s.lo)}${lt(s.loInc)}` : ''}x${s.hi ? `${lt(s.hiInc)}${name(s.hi)}` : ''}`)).join(',');
+    lcd.text(pattern.replace(/x/g, '𝑥'), 0, LINES[0]);
+    values.slice(this.offset / 40, this.offset / 40 + 3).forEach((v, i) => {
+      lcd.text(`${letters[this.offset / 40 + i]}=`, 0, LINES[i + 1]);
+      lcd.textRight(modelText(this.calc.model(v, { form: 'dec' }), { decimalMark: ',' }).replace('-', '−'), 192, LINES[i + 1]);
+    });
+    return {};
+  }
+
   /** Outside MathI/MathO the boundaries are letters with their decimal values listed below (User's Guide p.30). */
   letterView(r) {
     const letters = 'abcdefgh';
@@ -329,6 +390,22 @@ function ratioEditor(calc) {
     r.el.querySelector('table').replaceWith(h('div', 'ratio-line', parts));
     r.el.querySelector('.side')?.remove();
     return r;
+  };
+  // pixel display: "1 : 2 = X : 10" on one line, the selected value inverted, the input or value below
+  grid.paint = (lcd) => {
+    const fields = md.kind === 'X:D' ? [0, ':', 1, '=', 'X', ':', 2] : [0, ':', 1, '=', 2, ':', 'X'];
+    let x = 1;
+    for (const f of fields) {
+      if (typeof f === 'number') {
+        const text = cellText(md.coef[0][f], 6);
+        lcd.textRight(text, x + 36, 12, { font: 'T' });
+        if (grid.c === f) lcd.invert(x, 3, 37, 11);
+        else lcd.hline(x, x + 36, 14);
+        x += 38;
+      } else x = lcd.text(f, x, 12, { font: f === 'X' ? 'L' : 'T' }) + 1;
+    }
+    grid.paintFooter(lcd);
+    return { noMath: !grid.editor };
   };
   return grid;
 }

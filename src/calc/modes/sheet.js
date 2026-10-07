@@ -13,6 +13,8 @@ import { commonOptnPage } from '../screens/menus.js';
 import { LINE_TEMPLATE, RecallScreen } from '../screens/calcscreen.js';
 import { VARIABLE_KEYS } from '../keymap.js';
 import { t } from '../i18n.js';
+import { LINES } from '../../ui/lcd.js';
+import { editorBox, modelBox, textBox, row, drawBox } from '../../ui/mathbox.js';
 
 const COLS = ['A', 'B', 'C', 'D', 'E'];
 const ROWS = 45;
@@ -349,6 +351,46 @@ class Sheet {
     el.append(footer);
     return { el, status: { noMath: !this.editor, sto: this.stoPending } };
   }
+
+  /**
+   * The calculator's spreadsheet: column letters on an inverted header band, inverted row numbers,
+   * ruled cells with tiny-font values, the selected cell inverted, the cell contents on the bottom line.
+   */
+  paint(lcd) {
+    const left = 19, colW = 42;
+    const visCols = [0, 1, 2, 3].map((k) => this.left + k);
+    lcd.fill(left, 0, 4 * colW + 1, 9);
+    visCols.forEach((c, k) => lcd.text(COLS[c], left + k * colW + 19, 7, { font: 'T', invert: true }));
+    const hl = this.grab ?? this;
+    for (let i = 0; i < 4; i++) {
+      const r = this.top + i;
+      const base = 17 + i * 10;
+      lcd.fill(0, base - 8, left, 10);
+      lcd.textRight(String(r + 1), left - 1, base, { font: 'T', invert: true });
+      lcd.hline(left, left + 4 * colW, base + 2);
+      visCols.forEach((c, k) => {
+        const x0 = left + k * colW;
+        lcd.vline(x0 + colW, base - 8, base + 2);
+        const cell = this.cells[name(c, r)];
+        const text = cell ? (cell.value === 'ERROR' ? 'ERROR' : cell.value ? cellText(cell.value, 6) : '') : '';
+        if (text) lcd.textRight(text, x0 + colW - 1, base, { font: 'T' });
+        if (r === hl.r && c === hl.c) lcd.invert(x0 + 1, base - 8, colW - 1, 10);
+      });
+    }
+    const foot = (b) => drawBox(lcd, b, Math.max(0, 192 - b.w), Math.min(61, 62 - b.desc));
+    if (this.grab) foot(textBox(t('Set:[=]')));
+    else if (this.paste) foot(textBox(t('Paste:[=]')));
+    else if (this.editor) {
+      const b = editorBox(this.editor.root, { math: this.math, cursor: this.editor.cursor(), cursorState: {} });
+      drawBox(lcd, b, Math.min(0, 191 - b.w), Math.min(61, 62 - b.desc));
+    } else {
+      const cell = this.cells[name(this.c, this.r)];
+      if (cell?.formula && this.calc.setup.sheetShowCell === 'formula') foot(row([textBox('='), editorBox(cell.formula, { math: this.math, cursor: null })]));
+      else if (cell?.value === 'ERROR') foot(textBox('ERROR'));
+      else if (cell?.value) foot(modelBox(this.calc.model(cell.value, {}), {}));
+    }
+    return { noMath: !this.editor, sto: this.stoPending };
+  }
 }
 
 /** Fill Formula / Fill Value dialog: a "Form"/"Value" line and a "Range" line such as B1:B3. */
@@ -437,5 +479,16 @@ class FillDialog {
     const el = h('div', 'kv', h('div', 'row', h('span', 'title', t(this.formula ? 'Fill Formula' : 'Fill Value'))),
       row(t(this.formula ? 'Form' : 'Value'), this.value, this.line === 0), row(t('Range'), this.range, this.line === 1));
     return { el, status: { noMath: true } };
+  }
+
+  paint(lcd) {
+    lcd.text(t(this.formula ? 'Fill Formula' : 'Fill Value'), 0, LINES[0]);
+    [[t(this.formula ? 'Form' : 'Value'), this.value, 0], [t('Range'), this.range, 1]].forEach(([label, ed, k]) => {
+      const base = LINES[1 + k];
+      const x = lcd.text(`${label.padEnd(6, ' ')}:`, 0, base);
+      drawBox(lcd, editorBox(ed.root, { math: false, cursor: this.line === k && this.editing ? ed.cursor() : null, cursorState: {} }), x, base);
+      if (this.line === k) lcd.invert(0, base - 12, 192, 14);
+    });
+    return { noMath: true };
   }
 }

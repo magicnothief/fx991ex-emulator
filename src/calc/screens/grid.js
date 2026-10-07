@@ -11,6 +11,7 @@ import { h, renderNodes, renderModel } from '../../ui/render.js';
 import { ErrorScreen } from './common.js';
 import { LINE_TEMPLATE } from './calcscreen.js';
 import { t } from '../i18n.js';
+import { editorBox, modelBox, textBox, drawBox } from '../../ui/mathbox.js';
 
 /**
  * Short text for a value in a narrow cell. Digits that do not fit are cut off, not rounded
@@ -131,6 +132,97 @@ export class GridScreen {
       else if (this.r < this.rows - 1) { this.c = 0; this.move(1, 0); }
     } else this.move(1, 0);
     return true;
+  }
+
+  // ------------------------------------------------------------ pixel display
+
+  /**
+   * Table layout of the calculator (User's Guide screenshots): a 19-px row-number column and 42-px
+   * columns separated by vertical lines, tiny-font cells on a 10-px pitch under a header line, the
+   * selected cell inverted, and the full value (or the input) on the bottom line in the main font.
+   */
+  paint(lcd) {
+    const spec = this.spec;
+    if (spec.matrix) return this.paintMatrix(lcd);
+    const left = spec.rowNumbers ? 19 : 0;
+    const colW = 42;
+    const header = spec.header !== false;
+    const first = header ? 17 : 8;
+    const vis = spec.visibleRows;
+    const bottom = first + (vis - 1) * 10 + 2;
+    if (spec.rowNumbers) lcd.vline(left, 0, bottom);
+    spec.cols.forEach((col, c) => {
+      const x0 = left + c * colW;
+      lcd.vline(x0 + colW, 0, bottom);
+      if (header) {
+        const label = t(col.label).replace(/x/g, '𝑥');
+        lcd.text(label, x0 + 1 + Math.floor((colW - label.length * 6) / 2), 7, { font: 'T' });
+      }
+    });
+    for (let i = 0; i < vis; i++) {
+      const r = this.top + i;
+      if (r >= this.rows) break;
+      const base = first + i * 10;
+      if (spec.rowNumbers) lcd.textRight(String(r + 1), left - 1, base, { font: 'T' });
+      spec.cols.forEach((col, c) => {
+        const x0 = left + c * colW;
+        const v = r < spec.rowCount() ? spec.get(r, c) : null;
+        const text = cellText(v, CELL_CHARS);
+        if (text) lcd.textRight(text, x0 + colW - 1, base, { font: 'T' });
+        if (r === this.r && c === this.c) lcd.invert(x0 + 1, base - 8, colW - 1, 10);
+      });
+    }
+    if (spec.side) {
+      const el = spec.side();
+      const lines = el.children.length ? [...el.children].map((n) => n.textContent) : [el.textContent];
+      lines.forEach((l, i) => lcd.text(l, left + spec.cols.length * colW + 3, first + i * 10, { font: 'S' }));
+    }
+    this.paintFooter(lcd);
+    return { noMath: !this.editor, up: this.top > 0, down: this.top + vis < this.rows };
+  }
+
+  /** Bottom line: the input being typed (left), or the full value of the selected cell (right). */
+  paintFooter(lcd) {
+    const spec = this.spec;
+    if (this.editor) {
+      const b = editorBox(this.editor.root, { math: this.editor.math, cursor: this.editor.cursor(), cursorState: {} });
+      drawBox(lcd, b, Math.min(0, 191 - b.w), Math.min(61, 62 - b.desc));
+      return;
+    }
+    const v = this.r < spec.rowCount() ? spec.get(this.r, this.c) : null;
+    const custom = spec.footer?.(this.r, this.c);
+    let b = null;
+    if (custom) b = textBox(custom.textContent ?? String(custom));
+    else if (v && typeof v !== 'string') b = modelBox(this.calc.model(v, {}), { digitSep: this.calc.setup.digitSep });
+    else if (typeof v === 'string') b = textBox(v);
+    if (b) drawBox(lcd, b, Math.max(0, 192 - b.w), Math.min(61, 62 - b.desc));
+  }
+
+  /** Matrix and vector editors: the title, then the cells between brackets, the value at the bottom. */
+  paintMatrix(lcd) {
+    const spec = this.spec;
+    lcd.text(spec.title, 0, 8, { font: 'S' });
+    const cols = spec.cols.length;
+    const colW = cols > 3 ? 40 : 44;
+    const x0 = 10;
+    const vis = spec.visibleRows;
+    const shown = Math.min(vis, this.rows);
+    const top = 12, bot = top + shown * 10 + 1;
+    lcd.vline(x0 - 4, top, bot); lcd.hline(x0 - 4, x0 - 2, top); lcd.hline(x0 - 4, x0 - 2, bot);
+    const xr = x0 + cols * colW + 2;
+    lcd.vline(xr, top, bot); lcd.hline(xr - 2, xr, top); lcd.hline(xr - 2, xr, bot);
+    for (let i = 0; i < shown; i++) {
+      const r = this.top + i;
+      const base = top + 9 + i * 10;
+      spec.cols.forEach((col, c) => {
+        const cx = x0 + c * colW;
+        const text = cellText(spec.get(r, c), CELL_CHARS);
+        lcd.textRight(text, cx + colW - 2, base, { font: 'T' });
+        if (r === this.r && c === this.c) lcd.invert(cx, base - 8, colW - 1, 10);
+      });
+    }
+    this.paintFooter(lcd);
+    return { noMath: !this.editor, up: this.top > 0, down: this.top + vis < this.rows };
   }
 
   /** Bracketed layout used by the Matrix and Vector editors ("MatA=" followed by the matrix). */

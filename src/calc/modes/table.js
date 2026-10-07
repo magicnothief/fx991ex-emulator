@@ -11,6 +11,7 @@ import { Menu, ErrorScreen } from '../screens/common.js';
 import { commonOptnPage } from '../screens/menus.js';
 import { ParamScreen } from '../screens/params.js';
 import { LINE_TEMPLATE } from '../screens/calcscreen.js';
+import { editorBox, textBox, row, drawBox } from '../../ui/mathbox.js';
 
 export const tableMode = {
   start(calc) {
@@ -74,6 +75,12 @@ class FuncInput {
     const expr = h('div', `expr-area${this.math ? '' : ' line'}`, h('span', 'expr-scroll', label,
       renderNodes(this.editor.root, { math: this.math, cursor: this.editor.cursor(), cursorState: { block: this.editor.remaining() <= 10 } })));
     return { el: h('div', null, expr) };
+  }
+
+  paint(lcd) {
+    const label = row([textBox(this.which), textBox('('), textBox('𝑥'), textBox(')='),
+      editorBox(this.editor.root, { math: this.math, cursor: this.editor.cursor(), cursorState: { block: this.editor.remaining() <= 10 } })]);
+    drawBox(lcd, label, 0, 1 + label.asc);
   }
 }
 

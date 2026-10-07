@@ -1,6 +1,7 @@
 // MENU, SETUP, RESET, CONST, CONV, QR and the OPTN submenus shared by all modes.
 import { h } from '../../ui/render.js';
-import { menuIcon } from '../../ui/menuicons.js';
+import { menuIcon, iconRows } from '../../ui/menuicons.js';
+import { scrollbar, LINES } from '../../ui/lcd.js';
 import { Menu, Message, Confirm, DigitPrompt, page, item, closeMenus } from './common.js';
 import { CONSTANT_GROUPS, CONSTANT_PAGES, CONVERSION_GROUPS, CONVERSION_PAGES } from '../../core/constants.js';
 import { MENU_KEY } from '../keymap.js';
@@ -60,6 +61,17 @@ class MainMenu {
     });
     const el = h('div', 'mainmenu', h('div', 'icons', icons), h('div', 'label', `${MODE_KEYS[this.sel]}:${t(MODE_LIST[this.sel].label)}`));
     return { el, status: { bare: true } };
+  }
+
+  /** Icons in 47×23 cells on the 48×24 grid (rows 1–47), mode name on rows 50–61; only ▲▼ in the status line. */
+  paint(lcd) {
+    const firstRow = Math.min(Math.max(0, Math.floor(this.sel / 4) - 1), 1);
+    for (let j = 0; j < 8; j++) {
+      const idx = firstRow * 4 + j;
+      lcd.bitmap(iconRows(idx, MODE_KEYS[idx], idx === this.sel), 1 + (j % 4) * 48, 1 + Math.floor(j / 4) * 24);
+    }
+    lcd.text(`${MODE_KEYS[this.sel]}:${t(MODE_LIST[this.sel].label)}`, 0, 61);
+    return { only: true, up: firstRow > 0, down: firstRow === 0 };
   }
 }
 
@@ -127,6 +139,16 @@ class ContrastScreen {
     const c = this.calc.setup.contrast;
     const bar = h('div', null, `${t('LIGHT')} ${'■'.repeat(c)}${'□'.repeat(9 - c)} ${t('DARK')}`);
     return { el: h('div', 'message', h('div', 'big', t('CONTRAST')), bar, h('div', null, '[◀]  [▶]')) };
+  }
+
+  paint(lcd) {
+    const c = this.calc.setup.contrast;
+    lcd.text(t('CONTRAST'), 0, LINES[0]);
+    lcd.text(t('LIGHT'), 0, LINES[2], { font: 'S' });
+    lcd.textRight(t('DARK'), 192, LINES[2], { font: 'S' });
+    const x = lcd.text('[◀]', 0, LINES[3]) + 4;
+    for (let i = 0; i < 9; i++) (i < c ? lcd.fill.bind(lcd) : lcd.frame.bind(lcd))(x + i * 8, LINES[3] - 8, 7, 8);
+    lcd.textRight('[▶]', 192, LINES[3]);
   }
 }
 
