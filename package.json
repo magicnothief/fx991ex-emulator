@@ -1,7 +1,7 @@
 {
   "name": "fx991ex-emulator",
   "productName": "fx-991EX Emulator",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Desktop emulator of the CASIO fx-991EX ClassWiz scientific calculator",
   "type": "module",
   "main": "electron/main.cjs",
